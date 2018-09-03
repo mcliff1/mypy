@@ -17,6 +17,10 @@ class MyTemplate(Template):
 
 
 
+
+
+
+
 def main():
     cart = []
     cart.append(dict(item='Coke', price=8, qty=2))
