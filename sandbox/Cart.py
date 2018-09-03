@@ -16,6 +16,7 @@ class MyTemplate(Template):
     delimiter = '#'  # from $
 
 
+
 def main():
     cart = []
     cart.append(dict(item='Coke', price=8, qty=2))
