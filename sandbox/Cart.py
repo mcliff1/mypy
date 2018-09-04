@@ -16,11 +16,6 @@ class MyTemplate(Template):
     delimiter = '#'  # from $
 
 
-
-
-
-
-
 def main():
     cart = []
     cart.append(dict(item='Coke', price=8, qty=2))
@@ -37,6 +32,7 @@ def main():
         total += data['price']
 
     print('Total:' + str(total))
+
 
 if __name__ == '__main__':
     main()
