@@ -18,16 +18,27 @@ player_icon = ''
 computer_icon = ''
 
 
-def print_board():
+def print_board(move_number=None, help=None):
     """
     prints the current state of the BOARD to console
     """
-    # print()
+    if help:
+        print(' top-L | top-M | top-R')
+        print('-------+-------+-------')
+        print(' mid-L | mid-M | mid-R')
+        print('-------+-------+-------')
+        print(' bot-L | bot-M | bot-R')
+        return
+
+    if move_number:
+        print('Move #{}'.format(move_number))
     print(' ' + BOARD['top-L'] + ' | ' + BOARD['top-M'] + ' | ' + BOARD['top-R'])
     print('---+---+---')
     print(' ' + BOARD['mid-L'] + ' | ' + BOARD['mid-M'] + ' | ' + BOARD['mid-R'])
     print('---+---+---')
     print(' ' + BOARD['bot-L'] + ' | ' + BOARD['bot-M'] + ' | ' + BOARD['bot-R'])
+
+
 
 
 def check_for_victory(is_player):
@@ -63,7 +74,7 @@ def check_for_victory(is_player):
     return False
 
 
-def player_move():
+def player_move(move_number=None):
     """
     prompts the user to make a move
 
@@ -81,14 +92,14 @@ def player_move():
         if check_if_played(choice):
             print('a piece is already in that locaation, select another: ', end='')
         else:
-            print('setting {} to be {}'.format(choice, player_icon))
+            # print('setting {} to be {}'.format(choice, player_icon))
             BOARD[choice] = player_icon
             has_played = True
-    print_board()
+    print_board(move_number)
 
     return check_for_victory(is_player=True)
 
-def computer_move():
+def computer_move(move_number=None):
     """
     randomly select a spot
 
@@ -101,10 +112,10 @@ def computer_move():
         rand_row = random.randint(0, 2)
         rand_col = random.randint(0, 2)
 
-    print('setting {} to be {}'.format(LAT[rand_row]+LON[rand_col], computer_icon))
+    # print('setting {} to be {}'.format(LAT[rand_row]+LON[rand_col], computer_icon))
 
     BOARD[LAT[rand_row] + LON[rand_col]] = computer_icon
-    print_board()
+    print_board(move_number)
 
     return check_for_victory(is_player=False)
 
@@ -151,27 +162,22 @@ def main():
 
     move_count = 0
     winner = None
-    print_board()
-    while move_count != 9:
-        if player_icon == 'X':
-            if player_move():
-                winner = 'player'
-                break
-            print()
-            if computer_move():
-                winner = 'computer'
-                break
-        else:
-            # player is 'O'
-            if computer_move():
-                winner = 'computer'
-                break
-            print()
-            if player_move():
-                winner = 'player'
-                break
-        print()
+    print_board(help=True)
+    turn_indicator = 'X'
+    while move_count < 9:
         move_count += 1
+        if turn_indicator == player_icon:
+            if player_move(move_count):
+                winner = 'player'
+                break
+            turn_indicator = computer_icon
+        else:
+            if computer_move(move_count):
+                winner = 'computer'
+                break
+            turn_indicator = player_icon
+
+        print()
 
     # if we don't have a winner at 9 moves, it's a tie
     if move_count == 9 and not winner:
