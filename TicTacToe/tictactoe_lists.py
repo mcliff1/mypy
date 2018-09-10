@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import random, sys, time
-from Tkinter import *
+from tkinter import *
 #from tkMessageBox import showinfo, askyesno
 
 User, Machine = 'user', 'machine'
@@ -15,7 +15,8 @@ Debug = 1
 
 def traceif(*args):
     if Debug:
-        apply(trace, args)
+        trace(args)
+        # apply(trace, args)
 
 def trace(*args):
     for arg in args: print(arg,)
@@ -24,7 +25,8 @@ def trace(*args):
 def pp(board):
     if Debug:
         rows = map((lambda row: '\n\t' + str(row)), board)
-        return string.join(rows)
+        # return string.join(rows)
+        ''.join(rows)
 
 
 
@@ -40,7 +42,8 @@ def TicTacToe(mode=Mode, **args):
         classobj = eval(classname)
     except:
         print('Bad -mode flag, value:', mode)
-    return apply(eval(classname), (), args)
+    #return apply(eval(classname), (), args)
+    eval(classname, args)
 
 
 #
@@ -50,7 +53,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         TicTacToe().mainloop()
     else:
-        if (len.sys.argv) == 1:
+        if len(sys.argv) == 1:
             TicTacToe().mainloop()
         else:
             needEval = ['-degree']
@@ -63,4 +66,5 @@ if __name__ == '__main__':
                 else:
                     opts[args[i][1:]] = args[i+1]
                 trace(opts)
-                apply(TicTacToe, (), opts).mainloop()
+                #apply(TicTacToe, (), opts).mainloop()
+                TicTacToe(opts).mainloop()
