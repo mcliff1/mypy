@@ -8,7 +8,7 @@ author: Mark Lutz
 (for python3)
 """
 import sys
-from tkinter import Frame, Menubutton, Menu, Button, Label
+from tkinter import Frame, Menubutton, Menu, Button, Label, Tk, Toplevel
 from tkinter import LEFT, RIGHT, TOP, BOTTOM, YES, BOTH
 from tkinter import DISABLED, FLAT, RAISED, SUNKEN, X
 from tkinter.messagebox import showinfo
@@ -108,6 +108,19 @@ class GuiMakerWindowMenu(GuiMaker):
         menu_bar = Menu(self.master)
         self.master.config(menu=menu_bar)
 
+        for (name, key, items) in self.menu_bar:
+            pulldown = Menu(menu_bar)
+            self._add_menu_items(pulldown, items)
+            menu_bar.add_cascade(label=name, underline=key, menu=pulldown)
+
+        if self.help_button:
+            if sys.platform[:3].lower() == 'win':
+                menu_bar.add_command(label='Help', command=self.help)
+            else:
+                pulldown = Menu(menu_bar)
+                pulldown.add_command(label='About', command=self.help)
+                menu_bar.add_cascade(label='Help', menu=pulldown)
+
 
 ###########################################
 # Self test
@@ -117,11 +130,10 @@ if __name__ == '__main__':
     MENU_BAR = [
         ('File', 0,
          [('Open', 0, lambda: 0),
-          ('Quit', 0, sys.exit)],
-         'Edit', 0,
+          ('Quit', 0, sys.exit)]),
+        ('Edit', 0,
          [('Cut', 0, lambda: 0),
-          ('Paste', 0, lambda: 0)]
-        )
+          ('Paste', 0, lambda: 0)])
     ]
 
     TOOL_BAR = [('Quit', sys.exit, {'side': LEFT})]
@@ -130,3 +142,19 @@ if __name__ == '__main__':
         def start(self):
             self.menu_bar = MENU_BAR
             self.tool_bar = TOOL_BAR
+
+    class TestAppWindowMenu(GuiMixin, GuiMakerWindowMenu):
+        def start(self):
+            self.menu_bar = MENU_BAR
+            self.tool_bar = TOOL_BAR
+
+    class TestAppWindowMenuBasic(GuiMakerFrameMenu):
+        def start(self):
+            self.menu_bar = MENU_BAR
+            self.tool_bar = TOOL_BAR   # guimaker help not guimixin
+
+    root = Tk()
+    TestAppFrameMenu(Toplevel())
+    TestAppWindowMenu(Toplevel())
+    TestAppWindowMenuBasic(Toplevel())
+    root.mainloop()
