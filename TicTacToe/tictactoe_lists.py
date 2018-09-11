@@ -3,7 +3,7 @@
 
 import random, sys, time
 from tkinter import *
-from Gui.guimaker import GuiMakerWindowMenu
+from gui.guimaker import GuiMakerWindowMenu
 #from tkMessageBox import showinfo, askyesno
 
 USER, MACHINE = 'user', 'machine'
