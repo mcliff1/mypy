@@ -5,12 +5,14 @@ import random, sys, time
 from tkinter import *
 from gui.guimaker import GuiMakerWindowMenu
 #from tkMessageBox import showinfo, askyesno
+#import gui.guimaker
 
 USER, MACHINE = 'user', 'machine'
 X, O, EMPTY = 'X', 'O', ' '
 FONT_SIZE = 50
 DEGREE = 3
-MODE = 'Expert2'
+#MODE = 'Expert2'
+MODE = 'Random'
 
 DEBUG = 1
 
@@ -45,16 +47,32 @@ class TicTacToeBase(GuiMakerWindowMenu):
                  degree=DEGREE):
         self.next_move = goes_first
         self.user_mark = user_mark
-        self.machine_mark = (user_mark == X and O) or X
+        self.machine_mark = O if user_mark == X else X
         self.degree = degree
         self.record = Record()
         self.make_widgets = (lambda s=self, f=fg, b=bg, fs=font_size: s.drawBoard(f, b, fs))
 
+        GuiMakerWindowMenu.__init__(self, parent=parent)
 
 
 ########################################
 #  Subclass definitions
 
+class TicTacToeRandom(TicTacToeBase):
+    """
+    picks an empty slot at random
+    """
+    def pick_move(self):
+        empties = []
+        for row in self.degree:
+            for col in self.degree:
+                if not self.board[row][col]:
+                    empties.append((row, col))
+        return random.choice(empties)
+
+
+########################################
+#  Subclass definitions
 
 
 def TicTacToe(mode=MODE, **args):
@@ -75,7 +93,9 @@ def TicTacToe(mode=MODE, **args):
 #
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        TicTacToe().mainloop()
+        # # FIXME: this should take the 'Random' part from MODE
+        #TicTacToe().mainloop()
+        TicTacToeRandom().mainloop()
     else:
         if len(sys.argv) == 1:
             TicTacToe().mainloop()
