@@ -27,7 +27,7 @@ class GuiMaker(Frame):
         self.start()
         self._make_menu_bar()
         self._make_tool_bar()
-        self._make_widgets()
+        self.make_widgets()
 
     def _make_menu_bar(self):
         """
@@ -75,7 +75,7 @@ class GuiMaker(Frame):
             for (name, action, where) in self.tool_bar:
                 Button(tool_bar, text=name, command=action).pack(where)
 
-    def _make_widgets(self):
+    def make_widgets(self):
         """
         make 'middle' part last, so menu/toolbar always on top/bottom and clipped last
 

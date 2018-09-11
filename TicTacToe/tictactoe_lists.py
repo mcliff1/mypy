@@ -3,18 +3,19 @@
 
 import random, sys, time
 from tkinter import *
+from Gui.guimaker import GuiMakerWindowMenu
 #from tkMessageBox import showinfo, askyesno
 
-User, Machine = 'user', 'machine'
-X, O, Empty = 'X', 'O', ' '
-Fontsz = 50
-Degree = 3
-Mode = 'Expert2'
+USER, MACHINE = 'user', 'machine'
+X, O, EMPTY = 'X', 'O', ' '
+FONT_SIZE = 50
+DEGREE = 3
+MODE = 'Expert2'
 
-Debug = 1
+DEBUG = 1
 
 def traceif(*args):
-    if Debug:
+    if DEBUG:
         trace(args)
         # apply(trace, args)
 
@@ -23,17 +24,40 @@ def trace(*args):
     print()
 
 def pp(board):
-    if Debug:
+    if DEBUG:
         rows = map((lambda row: '\n\t' + str(row)), board)
         # return string.join(rows)
         ''.join(rows)
 
 
+########################################
+# Base Class
+
+class Record:
+    def __init__(self):
+        self.win = 0
+        self.loss = 0
+        self.draw = 0
+
+class TicTacToeBase(GuiMakerWindowMenu):
+    def __init__(self, parent=None, fg='black', bg='white',
+                 font_size=FONT_SIZE, goes_first=USER, user_mark=X,
+                 degree=DEGREE):
+        self.next_move = goes_first
+        self.user_mark = user_mark
+        self.machine_mark = (user_mark == X and O) or X
+        self.degree = degree
+        self.record = Record()
+        self.make_widgets = (lambda s=self, f=fg, b=bg, fs=font_size: s.drawBoard(f, b, fs))
 
 
 
+########################################
+#  Subclass definitions
 
-def TicTacToe(mode=Mode, **args):
+
+
+def TicTacToe(mode=MODE, **args):
     """
     game object generator - external interface
     """
