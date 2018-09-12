@@ -1,7 +1,11 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
-import random, sys, time
+import random
+import sys
+import time
+import itertools
+
 from tkinter import *
 from tkinter.messagebox import showinfo, askyesno
 from gui.guimaker import GuiMakerWindowMenu
@@ -231,6 +235,75 @@ class TicTacToeRandom(TicTacToeBase):
         return random.choice(empties)
 
 
+class TicTacToeSmart(TicTacToeBase):
+    """
+    pick imminent win or loss, else static score
+    """
+    def pick_move(self):
+        self.update()
+        time.sleep(1) # too fast!
+
+        # this is a representation of the board
+        count_marks = self._count_across_down(), self._count_diagonal()
+        for row, col in itertools.product(range(self.degree), range(self.degree)):
+            move = (row, col)
+            if self.board[row][col] == EMPTY:
+                if self.is_win(move, count_marks):
+                    return move
+
+        for row, col in itertools.product(range(self.degree), range(self.degree)):
+            move = (row, col)
+            if self.board[row][col] == EMPTY:
+                if self.is_block(move, count_marks):
+                    return move
+
+        # else pick randomly??  let's score them
+        best = 0
+        for row, col in itertools.product(range(self.degree), range(self.degree)):
+            move = (row, col)
+            if self.board[row][col] == EMPTY:
+                score = self.score_move(move, count_marks)
+                if score > best:
+                    pick = move
+                    best = score
+        trace('Picked', pick, 'score', best)
+        return pick
+
+    def _count_accross_down(self):
+        """
+        for each row, col count the number of marks (for each player)
+        """
+        count_rows = {}
+        count_cols = {}
+        for row, col in itertools.product(range(self.degree), range(self.degree)):
+            mark = self.board[row][col]
+            try:
+                count_rows[(row, mark)] = count_rows[(row, mark)] + 1
+            except KeyError:
+                count_rows[(row, mark)] = 1
+            try:
+                count_cols[(col, mark)] = count_rows[(col, mark)] + 1
+            except KeyError:
+                count_rows[(col, mark)] = 1
+        return count_rows, count_cols
+
+    def _count_diagonal(self):
+        """
+        provides counts of the diagonal for each mark(player)
+        """
+        tally = {X: 0, O: 0, EMPTY: 0}
+        count_diag1 = count_diag2 = tally.copy()
+        for ndx in range(self.degree):
+            # diag1 (0,0) (1,1) (2,2)
+            mark = self.board[ndx][ndx]
+            count_diag1[mark] - count_diag1[mark] + 1
+
+            # diag2 (0,2) (1,1) (2,0)
+            mark = self.board[ndx][(self.degree - 1) - ndx]
+            count_diag2[mark] - count_diag2[mark] + 1
+
+## TODO - is Win, is Block, score_move
+
 ########################################
 #  Subclass definitions
 
@@ -245,7 +318,8 @@ def TicTacToe(mode=MODE, **args):
     except:
         print('Bad -mode flag, value:', mode)
     #return apply(eval(classname), (), args)
-    eval(classname, args)
+    #eval(classname, args)
+    return globals()[classname](args)
 
 
 #
@@ -255,7 +329,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         # # FIXME: this should take the 'Random' part from MODE
         #TicTacToe().mainloop()
-        TicTacToeRandom().mainloop()
+        TicTacToe().mainloop()
     else:
         if len(sys.argv) == 1:
             TicTacToe().mainloop()
