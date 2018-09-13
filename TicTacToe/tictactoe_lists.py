@@ -16,8 +16,9 @@ USER, MACHINE = 'user', 'machine'
 X, O, EMPTY = 'X', 'O', ' '
 FONT_SIZE = 50
 DEGREE = 3
-#MODE = 'Expert2'
-MODE = 'Random'
+# MODE = 'Expert2'
+# MODE = 'Random'
+MODE = 'Smart'
 
 DEBUG = 1
 
@@ -243,33 +244,35 @@ class TicTacToeSmart(TicTacToeBase):
         self.update()
         time.sleep(1) # too fast!
 
-        # this is a representation of the board
-        count_marks = self._count_across_down(), self._count_diagonal()
         for row, col in itertools.product(range(self.degree), range(self.degree)):
             move = (row, col)
             if self.board[row][col] == EMPTY:
-                if self.is_win(move, count_marks):
+                if self._is_win(move):
                     return move
 
         for row, col in itertools.product(range(self.degree), range(self.degree)):
             move = (row, col)
             if self.board[row][col] == EMPTY:
-                if self.is_block(move, count_marks):
+                if self._is_block(move):
                     return move
 
         # else pick randomly??  let's score them
         best = 0
+        # this is a representation of the board counts
+        count_marks = self._count_across_down(), self._count_diagonal()
+        trace(count_marks)
         for row, col in itertools.product(range(self.degree), range(self.degree)):
             move = (row, col)
             if self.board[row][col] == EMPTY:
-                score = self.score_move(move, count_marks)
+                score = self._score_move(move, count_marks)
+                trace(score)
                 if score > best:
                     pick = move
                     best = score
         trace('Picked', pick, 'score', best)
         return pick
 
-    def _count_accross_down(self):
+    def _count_across_down(self):
         """
         for each row, col count the number of marks (for each player)
         """
@@ -282,9 +285,9 @@ class TicTacToeSmart(TicTacToeBase):
             except KeyError:
                 count_rows[(row, mark)] = 1
             try:
-                count_cols[(col, mark)] = count_rows[(col, mark)] + 1
+                count_cols[(col, mark)] = count_cols[(col, mark)] + 1
             except KeyError:
-                count_rows[(col, mark)] = 1
+                count_cols[(col, mark)] = 1
         return count_rows, count_cols
 
     def _count_diagonal(self):
@@ -296,13 +299,62 @@ class TicTacToeSmart(TicTacToeBase):
         for ndx in range(self.degree):
             # diag1 (0,0) (1,1) (2,2)
             mark = self.board[ndx][ndx]
-            count_diag1[mark] - count_diag1[mark] + 1
+            count_diag1[mark] = count_diag1[mark] + 1
 
             # diag2 (0,2) (1,1) (2,0)
             mark = self.board[ndx][(self.degree - 1) - ndx]
-            count_diag2[mark] - count_diag2[mark] + 1
+            count_diag2[mark] = count_diag2[mark] + 1
+        return count_diag1, count_diag2
 
-## TODO - is Win, is Block, score_move
+    def _is_win(self, move):
+        """
+        sets the piece on a copy of the board to check for win
+        """
+        (row, col) = move
+        #board = self.board.copy()
+        self.board[row][col] = self.machine_mark
+        # trace(self.board)
+        is_win = self.check_win(self.machine_mark)
+        self.board[row][col] = EMPTY
+        # trace(self.board)
+        return is_win
+
+    def _is_block(self, move):
+        """
+        checks to see if we would lose if the player went there
+        """
+        (row, col) = move
+        #board = self.board
+        self.board[row][col] = self.user_mark
+        is_loss = self.check_win(self.user_mark)
+        self.board[row][col] = EMPTY
+        return is_loss
+
+
+    def _score_move(self, move, count_marks):
+        """
+        col score is looking at all the 'X', 'O' and EMPTY
+        (assume 'computer is X')
+        11 * how many X's + 10 * how many O's + 9 * how many opens
+        """
+        (row, col) = move
+        ((count_rows, count_cols), (count_diag1, count_diag2)) = count_marks
+        return (
+            count_cols.get((col, self.machine_mark), 0) * 11 +
+            count_rows.get((row, self.machine_mark), 0) * 11 +
+            count_diag1[self.machine_mark] * 11 +
+            count_diag2[self.machine_mark] * 11
+            +
+            count_cols.get((col, self.user_mark), 0) * 10 +
+            count_rows.get((row, self.user_mark), 0) * 10 +
+            count_diag1[self.user_mark] * 10 +
+            count_diag2[self.user_mark] * 10
+            +
+            count_cols.get((col, EMPTY), 0) * 11 +
+            count_rows.get((row, EMPTY), 0) * 11 +
+            count_diag1[EMPTY] * 11 +
+            count_diag2[EMPTY] * 11
+        )
 
 ########################################
 #  Subclass definitions
