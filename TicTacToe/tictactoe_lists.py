@@ -242,7 +242,7 @@ class TicTacToeSmart(TicTacToeBase):
     """
     def pick_move(self):
         self.update()
-        time.sleep(1) # too fast!
+        # time.sleep(1) # too fast!
 
         for row, col in itertools.product(range(self.degree), range(self.degree)):
             move = (row, col)
@@ -256,16 +256,19 @@ class TicTacToeSmart(TicTacToeBase):
                 if self._is_block(move):
                     return move
 
-        # else pick randomly??  let's score them
+        # let's score them
+        #   try to adjust scoring,  if player moves first
+        #     and picks bottom Right corner, computer will pick top left
+        #      player then picks center and can win the game.
         best = 0
         # this is a representation of the board counts
         count_marks = self._count_across_down(), self._count_diagonal()
-        trace(count_marks)
+        # trace(count_marks)
         for row, col in itertools.product(range(self.degree), range(self.degree)):
             move = (row, col)
             if self.board[row][col] == EMPTY:
                 score = self._score_move(move, count_marks)
-                trace(score)
+                # trace(score)
                 if score > best:
                     pick = move
                     best = score
