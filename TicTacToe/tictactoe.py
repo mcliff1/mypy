@@ -3,7 +3,13 @@
 """
 Tic Tac Toe OO game
 """
+import logging
+import random
 
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
+
+MODE = None
 X, O, EMPTY = 'X', 'O', ' '
 
 
@@ -84,7 +90,7 @@ class Board:
 
         return False
 
-    def open_position(self):
+    def has_open_position(self):
         """
         return True if there is an open position
 
@@ -101,6 +107,24 @@ class Board:
         return False
 
 
+    def list_open_positions(self):
+        """
+        returns a list(generator) of coordinate tuples for the board
+        locations that are open
+        """
+        # return_list = []
+        # for row in range(self.size):
+        #     for col in range(self.size):
+        #         if self.board[row][col] == EMPTY:
+        #             location = (row, col)
+        #             return_list.append(location)
+        # return return_list
+        for row in range(self.size):
+            for col in range(self.size):
+                if self.board[row][col] == EMPTY:
+                    position = (row, col)
+                    yield position
+
 
     def __str__(self):
         rows = map((lambda row: '\n\t' + str(row)), self.board)
@@ -113,8 +137,109 @@ class Board:
 
 
 
+class Player():
+    """
+    represents a player
 
-def TicTacToe(mode=Mode, **args):
+    made this a super class and sub with real person and various AI's
+    """
+
+    def __init__(self, marker):
+        self.marker = marker
+
+    def move(self, board):
+        """
+        return true if the move is made
+         otherwise return false if unable to move
+        """
+        #return board.place_marker((0, 0), self.marker)
+        open_moves = list(board.list_open_positions())
+        if open_moves:
+            move = random.choice(open_moves)
+            return board.place_marker(move, self.marker)
+        # else no open moves
+        return False
+
+
+
+    def __repr__(self):
+        return 'Player({})'.format(self.marker)
+
+
+class Game():
+    """
+    two players and a board
+
+    """
+
+    def __init__(self):
+        """
+        moved player array into play scope
+
+        sets up board and winner
+        maybe add history of winners/losers
+        """
+        self.board = Board()
+        #self.player1 = player1
+        #self.player2 = player2
+        self.winner = None
+
+
+    def play(self, player1, player2):
+        """
+        # FIXME: make players a list
+
+        A player will always have a .move(board) method
+        that will update the board and return True, otherwise
+        if unable to update the board returns False
+
+        this will run until either one of the players is
+        declared a winner by the Board.is_win() method OR
+        the Board.has_open_postion() method returns False
+
+        at this thme the Game.winner attribute will be set
+        to the winning player
+        """
+        while self.board.has_open_position():
+            if not player1.move(self.board) or \
+               self.board.is_win(player1.marker):
+                break
+
+            print(self.board)
+
+            if not player2.move(self.board) or \
+               self.board.is_win(player2.marker):
+                break
+
+            print(self.board)
+
+            # for player in players:
+            #     if not player.move(self.board) or \
+            #         self.board.is_win(player.marker):
+            #         break
+
+
+        if self.board.is_win(player1.marker):
+            self.winner = player1
+        elif self.board.is_win(player2.marker):
+            self.winner = player2
+        else:
+            # no open positions, and no winner, it's a draw
+            self.winner = None
+
+        # self.winner = None
+        # for player in players:
+        #     if self.board.is_win(player.marker)
+        #         self.winner = player
+        #         break
+
+
+    def reset(self):
+        self.board = Board()
+        self.winner = None
+
+
+def TicTacToe(mode=MODE, **args):
     """
     Game Object Generator Class - external Interface
     """
