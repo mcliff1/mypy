@@ -32,14 +32,19 @@ class Board:
         self.board = []
         self.size = size
         # how do I make this more pythonic?
-        for col in range(size):
+        for _ in range(size):
             self.board.append([0] * size)
         self.clear()
+
+
 
     def clear(self):
         """
         clears the board
         """
+        self.history = []
+        # this will be a list of tuples 'mark', 'move', 'board' (at start)
+
         for col in range(self.size):
             for row in range(self.size):
                 self.board[col][row] = EMPTY
@@ -59,6 +64,7 @@ class Board:
             return False
 
         if self.board[col][row] == EMPTY:
+            self.history.append((marker, (col, row), self.encode()))
             self.board[col][row] = marker
             return True
 
@@ -126,6 +132,7 @@ class Board:
                     yield position
 
 
+
     def __str__(self):
         rows = map((lambda row: '\n\t' + str(row)), self.board)
         # return string.join(rows)
@@ -134,6 +141,23 @@ class Board:
 
     def __repr__(self):
         return str(self.board)
+
+
+    def encode(self):
+        """
+        returns a int representation of the board that is encoded
+
+        start by a (size)^2 digit base three number 0 - empty, 1 - X, 2 - O
+        positions are (0,0), (0,1), (0,2), (1,0), ..., (2,2)
+        """
+        xlation = {EMPTY: '0', X: '1', O: '2'}
+        base3_str = ''
+        for row in range(self.size):
+            for col in range(self.size):
+                base3_str += xlation[self.board[row][col]]
+        # returns this string representation of base 3
+        return int(base3_str, 3)
+
 
 
 
@@ -166,6 +190,125 @@ class Player():
         return 'Player({})'.format(self.marker)
 
 
+class PlayerSmart(Player):
+    """
+    represents a smart player
+    """
+    def move(self, board):
+        #self.update()
+        # time.sleep(1) # too fast!
+        open_moves = list(board.list_open_positions())
+        for move in open_moves:
+            if self._is_win(move, board):
+                return move
+
+        for move in open_moves:
+            if self._is_block(move):
+                return move
+
+        # let's score them
+        #   try to adjust scoring,  if player moves first
+        #     and picks bottom Right corner, computer will pick top left
+        #      player then picks center and can win the game.
+        best = 0
+        # this is a representation of the board counts
+        count_marks = self._count_across_down(), self._count_diagonal()
+        # trace(count_marks)
+        for move in open_moves:
+            score = self._score_move(move, count_marks)
+            # trace(score)
+            if score > best:
+                pick = move
+                best = score
+        return pick
+
+    def _count_across_down(self):
+        """
+        for each row, col count the number of marks (for each player)
+        """
+        count_rows = {}
+        count_cols = {}
+        for row, col in itertools.product(range(self.size), range(self.size)):
+            mark = self.board[row][col]
+            try:
+                count_rows[(row, mark)] = count_rows[(row, mark)] + 1
+            except KeyError:
+                count_rows[(row, mark)] = 1
+            try:
+                count_cols[(col, mark)] = count_cols[(col, mark)] + 1
+            except KeyError:
+                count_cols[(col, mark)] = 1
+        return count_rows, count_cols
+
+    def _count_diagonal(self):
+        """
+        provides counts of the diagonal for each mark(player)
+        """
+        tally = {X: 0, O: 0, EMPTY: 0}
+        count_diag1 = count_diag2 = tally.copy()
+        for ndx in range(self.degree):
+            # diag1 (0,0) (1,1) (2,2)
+            mark = self.board[ndx][ndx]
+            count_diag1[mark] = count_diag1[mark] + 1
+
+            # diag2 (0,2) (1,1) (2,0)
+            mark = self.board[ndx][(self.degree - 1) - ndx]
+            count_diag2[mark] = count_diag2[mark] + 1
+        return count_diag1, count_diag2
+
+    def _is_win(self, move):
+        """
+        sets the piece on a copy of the board to check for win
+        """
+        (row, col) = move
+        #board = self.board.copy()
+        self.board[row][col] = self.machine_mark
+        # trace(self.board)
+        is_win = self.check_win(self.machine_mark)
+        self.board[row][col] = EMPTY
+        # trace(self.board)
+        return is_win
+
+    def _is_block(self, move):
+        """
+        checks to see if we would lose if the player went there
+        """
+        (row, col) = move
+        #board = self.board
+        self.board[row][col] = self.user_mark
+        is_loss = self.check_win(self.user_mark)
+        self.board[row][col] = EMPTY
+        return is_loss
+
+
+    def _score_move(self, move, count_marks):
+        """
+        col score is looking at all the 'X', 'O' and EMPTY
+        (assume 'computer is X')
+        11 * how many X's + 10 * how many O's + 9 * how many opens
+        """
+        (row, col) = move
+        ((count_rows, count_cols), (count_diag1, count_diag2)) = count_marks
+        return (
+            count_cols.get((col, self.machine_mark), 0) * 11 +
+            count_rows.get((row, self.machine_mark), 0) * 11 +
+            count_diag1[self.machine_mark] * 11 +
+            count_diag2[self.machine_mark] * 11
+            +
+            count_cols.get((col, self.user_mark), 0) * 10 +
+            count_rows.get((row, self.user_mark), 0) * 10 +
+            count_diag1[self.user_mark] * 10 +
+            count_diag2[self.user_mark] * 10
+            +
+            count_cols.get((col, EMPTY), 0) * 11 +
+            count_rows.get((row, EMPTY), 0) * 11 +
+            count_diag1[EMPTY] * 11 +
+            count_diag2[EMPTY] * 11
+        )
+
+
+
+
 class Game():
     """
     two players and a board
@@ -183,6 +326,7 @@ class Game():
         #self.player1 = player1
         #self.player2 = player2
         self.winner = None
+
 
 
     def play(self, player1, player2):
@@ -218,6 +362,8 @@ class Game():
             #         self.board.is_win(player.marker):
             #         break
 
+        if self.board.has_open_position():
+            print(self.board)
 
         if self.board.is_win(player1.marker):
             self.winner = player1
@@ -235,8 +381,15 @@ class Game():
 
 
     def reset(self):
+        """
+        resets the game (a new board and clears winner)
+        """
         self.board = Board()
         self.winner = None
+
+
+    def history(self):
+        return self.board.history
 
 
 def TicTacToe(mode=MODE, **args):
