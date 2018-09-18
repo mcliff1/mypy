@@ -5,37 +5,32 @@ Tic Tac Toe OO game
 """
 import logging
 import random
+import sys
+import copy
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
 
 MODE = None
-X, O, EMPTY = 'X', 'O', ' '
+#X, O, EMPTY = 'X', 'O', ' '
+EMPTY = ' '
 
 
 class Board:
     """
     object represents the board with X, O markers
     """
-    # POSITION_TOP_L = (0, 0)
-    # POSITION_TOP_M = (1, 0)
-    # POSITION_TOP_R = (2, 0)
-    # POSITION_MID_L = (0, 1)
-    # POSITION_MID_M = (1, 1)
-    # POSITION_MID_R = (2, 1)
-    # POSITION_BOT_L = (0, 2)
-    # POSITION_BOT_M = (1, 2)
-    # POSITION_BOT_R = (2, 2)
 
-
-    def __init__(self, size=3):
-        self.board = []
+    def __init__(self, board=None, size=3):
         self.size = size
         # how do I make this more pythonic?
-        for _ in range(size):
-            self.board.append([0] * size)
+        if board:
+            self.board = board
+        else:
+            self.board = []
+            for _ in range(size):
+                self.board.append([0] * size)
         self.clear()
-
 
 
     def clear(self):
@@ -64,7 +59,8 @@ class Board:
             return False
 
         if self.board[col][row] == EMPTY:
-            self.history.append((marker, (col, row), self.encode()))
+            # self.history.append((marker, (col, row), self.encode()))
+            self.history.append((marker, (col, row), copy.deepcopy(self.board)))
             self.board[col][row] = marker
             return True
 
@@ -143,18 +139,35 @@ class Board:
         return str(self.board)
 
 
-    def encode(self):
+    def encode(self, winner):
         """
         returns a int representation of the board that is encoded
+        from the persepective of the marker specified, it is expected to be
+        the winner players, and store the board configurations from the persepective
+        of the winning player to make predictions
 
-        start by a (size)^2 digit base three number 0 - empty, 1 - X, 2 - O
-        positions are (0,0), (0,1), (0,2), (1,0), ..., (2,2)
+        Draws are ??? ignored for now, since I would need to pick a marker
+
+        start by a (size)^2 digit base three number:
+            empty = 0
+            winner = 1
+            other = 2
+        positions are (0,0), (0,1), ..., (0,n), (1,0), ..., (n,n)
+
+        this should only be called after there is a winner
         """
-        xlation = {EMPTY: '0', X: '1', O: '2'}
+        # xlation = {EMPTY: '0', X: '1', O: '2'}
+        # since I am not keeping track of the marker other than winner use else
         base3_str = ''
         for row in range(self.size):
             for col in range(self.size):
-                base3_str += xlation[self.board[row][col]]
+                #base3_str += xlation[self.board[row][col]]
+                if self.board[row][col] == EMPTY:
+                    base3_str += '0'
+                elif self.board[row][col] == winner:
+                    base3_str += '1'
+                else: # expected to be the loser marker
+                    base3_str += '2'
         # returns this string representation of base 3
         return int(base3_str, 3)
 
@@ -168,8 +181,15 @@ class Player():
     made this a super class and sub with real person and various AI's
     """
 
-    def __init__(self, marker):
+    def __init__(self, name, marker):
+        """
+        it is expected to be either 'X' or 'O' for this game,
+        as long as the two players have separate markers
+
+        We have name so that we can use different implementations X or O
+        """
         self.marker = marker
+        self.name = name
 
     def move(self, board):
         """
@@ -185,9 +205,8 @@ class Player():
         return False
 
 
-
     def __repr__(self):
-        return 'Player({})'.format(self.marker)
+        return 'Player({}-{})'.format(self.name, self.marker)
 
 
 class PlayerSmart(Player):
@@ -306,6 +325,8 @@ class PlayerSmart(Player):
             count_diag2[EMPTY] * 11
         )
 
+    def __repr__(self):
+        return 'SmartPlayer({}-{})'.format(self.name, self.marker)
 
 
 
@@ -329,8 +350,11 @@ class Game():
 
 
 
-    def play(self, player1, player2):
+    def play(self, player1, player2, trace=True):
         """
+        trace option to draw the screen after each move (otherwise no display)
+
+
         # FIXME: make players a list
 
         A player will always have a .move(board) method
@@ -344,25 +368,33 @@ class Game():
         at this thme the Game.winner attribute will be set
         to the winning player
         """
+        method = 'play():'
+        if player1.marker == player2.marker:
+            LOGGER.error('%sboth players can not have the same marker "%s"',
+                         method, player1.marker)
+            return
+
         while self.board.has_open_position():
             if not player1.move(self.board) or \
                self.board.is_win(player1.marker):
                 break
 
-            print(self.board)
+            if trace:
+                print(self.board)
 
             if not player2.move(self.board) or \
                self.board.is_win(player2.marker):
                 break
 
-            print(self.board)
+            if trace:
+                print(self.board)
 
             # for player in players:
             #     if not player.move(self.board) or \
             #         self.board.is_win(player.marker):
             #         break
 
-        if self.board.has_open_position():
+        if trace and self.board.has_open_position():
             print(self.board)
 
         if self.board.is_win(player1.marker):
@@ -389,7 +421,13 @@ class Game():
 
 
     def history(self):
+        """
+        returns the history of the game
+        """
         return self.board.history
+
+
+
 
 
 def TicTacToe(mode=MODE, **args):
