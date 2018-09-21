@@ -7,6 +7,8 @@ import logging
 import random
 import sys
 import copy
+import itertools
+
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
@@ -92,6 +94,7 @@ class Board:
 
         return False
 
+
     def has_open_position(self):
         """
         return True if there is an open position
@@ -126,6 +129,59 @@ class Board:
                 if self.board[row][col] == EMPTY:
                     position = (row, col)
                     yield position
+
+    def count_across_down(self):
+        """
+        Used by scoring algorithms
+        for each row, col count the number of marks (for each player)
+        """
+        count_rows = {}
+        count_cols = {}
+        for row, col in itertools.product(range(self.size), range(self.size)):
+            mark = self.board[row][col]
+            try:
+                count_rows[(row, mark)] = count_rows[(row, mark)] + 1
+            except KeyError:
+                count_rows[(row, mark)] = 1
+            try:
+                count_cols[(col, mark)] = count_cols[(col, mark)] + 1
+            except KeyError:
+                count_cols[(col, mark)] = 1
+        return count_rows, count_cols
+
+
+    def count_diagonal(self):
+        """
+        Used by scoring algorithms
+        provides counts of the diagonal for each mark(player)
+        """
+        # tally = { mark:X: 0, O: 0, EMPTY: 0}
+        # count_diag1 = count_diag2 = tally.copy()
+        count_diag1 = count_diag2 = {}
+        for ndx in range(self.size):
+            # diag1 (0,0) (1,1) (2,2)
+            mark = self.board[ndx][ndx]
+            count_diag1[mark] = count_diag1.get(mark, 0) + 1
+
+            # diag2 (0,2) (1,1) (2,0)
+            mark = self.board[ndx][(self.size - 1) - ndx]
+            count_diag2[mark] = count_diag2.get(mark, 0) + 1
+        return count_diag1, count_diag2
+
+    def get_markers(self):
+        """
+        returns a list of the markers that are on the board
+        at most it will be 2 element list, it could be 1 if only one player moved
+        or 0 if the board is clear
+        """
+        marker_list = []
+        for row, col in itertools.product(range(self.size), range(self.size)):
+            if self.board[row][col] != EMPTY and self.board[row][col] not in marker_list:
+                marker_list.append(self.board[row][col])
+            if len(marker_list) > 1:
+                # there can be at most two differnt markers
+                break
+        return marker_list
 
 
 
@@ -172,11 +228,11 @@ class Board:
         return int(base3_str, 3)
 
 
-
-
 class Player():
     """
-    represents a player
+    represents a random player
+
+    a player shouldn't have a marker? or should they
 
     made this a super class and sub with real person and various AI's
     """
@@ -222,7 +278,7 @@ class PlayerSmart(Player):
                 return move
 
         for move in open_moves:
-            if self._is_block(move):
+            if self._is_block(move, board):
                 return move
 
         # let's score them
@@ -231,76 +287,83 @@ class PlayerSmart(Player):
         #      player then picks center and can win the game.
         best = 0
         # this is a representation of the board counts
-        count_marks = self._count_across_down(), self._count_diagonal()
+        count_marks = board.count_across_down(), board.count_diagonal()
         # trace(count_marks)
         for move in open_moves:
-            score = self._score_move(move, count_marks)
+            marker_list = [m for m in board.get_markers() if m != self.marker]
+            opponent_marker = marker_list[0] if marker_list else ''
+
+            score = self._score_move(move, opponent_marker, count_marks)
             # trace(score)
             if score > best:
                 pick = move
                 best = score
         return pick
 
-    def _count_across_down(self):
-        """
-        for each row, col count the number of marks (for each player)
-        """
-        count_rows = {}
-        count_cols = {}
-        for row, col in itertools.product(range(self.size), range(self.size)):
-            mark = self.board[row][col]
-            try:
-                count_rows[(row, mark)] = count_rows[(row, mark)] + 1
-            except KeyError:
-                count_rows[(row, mark)] = 1
-            try:
-                count_cols[(col, mark)] = count_cols[(col, mark)] + 1
-            except KeyError:
-                count_cols[(col, mark)] = 1
-        return count_rows, count_cols
+    # def _count_across_down(self):
+    #     """
+    #     for each row, col count the number of marks (for each player)
+    #     """
+    #     count_rows = {}
+    #     count_cols = {}
+    #     for row, col in itertools.product(range(self.size), range(self.size)):
+    #         mark = self.board[row][col]
+    #         try:
+    #             count_rows[(row, mark)] = count_rows[(row, mark)] + 1
+    #         except KeyError:
+    #             count_rows[(row, mark)] = 1
+    #         try:
+    #             count_cols[(col, mark)] = count_cols[(col, mark)] + 1
+    #         except KeyError:
+    #             count_cols[(col, mark)] = 1
+    #     return count_rows, count_cols
 
-    def _count_diagonal(self):
-        """
-        provides counts of the diagonal for each mark(player)
-        """
-        tally = {X: 0, O: 0, EMPTY: 0}
-        count_diag1 = count_diag2 = tally.copy()
-        for ndx in range(self.degree):
-            # diag1 (0,0) (1,1) (2,2)
-            mark = self.board[ndx][ndx]
-            count_diag1[mark] = count_diag1[mark] + 1
+    # def _count_diagonal(self):
+    #     """
+    #     provides counts of the diagonal for each mark(player)
+    #     """
+    #     tally = {X: 0, O: 0, EMPTY: 0}
+    #     count_diag1 = count_diag2 = tally.copy()
+    #     for ndx in range(self.degree):
+    #         # diag1 (0,0) (1,1) (2,2)
+    #         mark = self.board[ndx][ndx]
+    #         count_diag1[mark] = count_diag1[mark] + 1
+    #
+    #         # diag2 (0,2) (1,1) (2,0)
+    #         mark = self.board[ndx][(self.degree - 1) - ndx]
+    #         count_diag2[mark] = count_diag2[mark] + 1
+    #     return count_diag1, count_diag2
 
-            # diag2 (0,2) (1,1) (2,0)
-            mark = self.board[ndx][(self.degree - 1) - ndx]
-            count_diag2[mark] = count_diag2[mark] + 1
-        return count_diag1, count_diag2
-
-    def _is_win(self, move):
+    def _is_win(self, move, board):
         """
         sets the piece on a copy of the board to check for win
         """
         (row, col) = move
         #board = self.board.copy()
-        self.board[row][col] = self.machine_mark
+        board.board[row][col] = self.marker
         # trace(self.board)
-        is_win = self.check_win(self.machine_mark)
-        self.board[row][col] = EMPTY
+        is_win = board.is_win(self.marker)
+        board.board[row][col] = EMPTY
         # trace(self.board)
         return is_win
 
-    def _is_block(self, move):
+    def _is_block(self, move, board):
         """
         checks to see if we would lose if the player went there
         """
         (row, col) = move
-        #board = self.board
-        self.board[row][col] = self.user_mark
-        is_loss = self.check_win(self.user_mark)
-        self.board[row][col] = EMPTY
-        return is_loss
+        # gets the list with our own marker taken out (0 or 1 element)
+        marker_list = [m for m in board.get_markers() if m != self.marker]
+        if marker_list:
+            opponent_mark = marker_list[0]
+            board.board[row][col] = opponent_mark
+            is_loss = board.is_win(opponent_mark)
+            board.board[row][col] = EMPTY
+            return is_loss
+        return False
 
 
-    def _score_move(self, move, count_marks):
+    def _score_move(self, move, opponent_marker, count_marks):
         """
         col score is looking at all the 'X', 'O' and EMPTY
         (assume 'computer is X')
@@ -308,21 +371,22 @@ class PlayerSmart(Player):
         """
         (row, col) = move
         ((count_rows, count_cols), (count_diag1, count_diag2)) = count_marks
+
         return (
-            count_cols.get((col, self.machine_mark), 0) * 11 +
-            count_rows.get((row, self.machine_mark), 0) * 11 +
-            count_diag1[self.machine_mark] * 11 +
-            count_diag2[self.machine_mark] * 11
+            count_cols.get((col, self.marker), 0) * 11 +
+            count_rows.get((row, self.marker), 0) * 11 +
+            count_diag1.get(self.marker, 0) * 11 +
+            count_diag2.get(self.marker, 0) * 11
             +
-            count_cols.get((col, self.user_mark), 0) * 10 +
-            count_rows.get((row, self.user_mark), 0) * 10 +
-            count_diag1[self.user_mark] * 10 +
-            count_diag2[self.user_mark] * 10
+            count_cols.get((col, opponent_marker), 0) * 10 +
+            count_rows.get((row, opponent_marker), 0) * 10 +
+            count_diag1.get(opponent_marker, 0) * 10 +
+            count_diag2.get(opponent_marker, 0) * 10
             +
             count_cols.get((col, EMPTY), 0) * 11 +
             count_rows.get((row, EMPTY), 0) * 11 +
-            count_diag1[EMPTY] * 11 +
-            count_diag2[EMPTY] * 11
+            count_diag1.get(EMPTY, 0) * 11 +
+            count_diag2.get(EMPTY, 0) * 11
         )
 
     def __repr__(self):
@@ -332,6 +396,9 @@ class PlayerSmart(Player):
 
 class Game():
     """
+    a board, and set of rules
+     method play takes the players and runs the game
+
     two players and a board
 
     """
@@ -350,7 +417,8 @@ class Game():
 
 
 
-    def play(self, player1, player2, trace=True):
+    #def play(self, player1, player2, trace=True):
+    def play(self, players, trace=True):
         """
         trace option to draw the screen after each move (otherwise no display)
 
@@ -369,6 +437,8 @@ class Game():
         to the winning player
         """
         method = 'play():'
+        player1 = players[0]
+        player2 = players[1]
         if player1.marker == player2.marker:
             LOGGER.error('%sboth players can not have the same marker "%s"',
                          method, player1.marker)
@@ -434,25 +504,32 @@ def TicTacToe(mode=MODE, **args):
     """
     Game Object Generator Class - external Interface
     """
-    try:
-        classname = 'TicTacToe' + mode
-        classobj = eval(classname)
-    except:
-        print('Bad -mode flag value:', mode)
-    return apply(eval(classname), (), args)
+    # try:
+    #     classname = 'TicTacToe' + mode
+    #     classobj = eval(classname)
+    # except:
+    #     print('Bad -mode flag value:', mode)
+    # return apply(eval(classname), (), args)
 
 if __name__ == '__main__':
-    if (len.sys.argv) == 1:
-        TicTacToe().mainloop()
-    else:
-        needEval = ['-degree']
-        args = sys.argv[1:]
-        opts = {}
-        # parse the opts and args two at a time
-        for i in range(0, len(args), +2):
-            if args[i] in needEval:
-                opts[args[i][1:]] = eval(args[i+1])
-            else:
-                opts[args[i][1:]] = args[i+1]
-            trace(opts)
-            apply(TicTacToe, (), opts).mainloop()
+    # if len(sys.argv) == 1:
+    #     TicTacToe().mainloop()
+    # else:
+    #     needEval = ['-degree']
+    #     args = sys.argv[1:]
+    #     opts = {}
+    #     # parse the opts and args two at a time
+    #     for i in range(0, len(args), +2):
+    #         if args[i] in needEval:
+    #             opts[args[i][1:]] = eval(args[i+1])
+    #         else:
+    #             opts[args[i][1:]] = args[i+1]
+    #         trace(opts)
+    #         apply(TicTacToe, (), opts).mainloop()
+    p1 = Player('rand1', 'X')
+    p2 = Player('rand2', 'O')
+    Game().play([p1, p2])
+
+    pa1 = PlayerSmart('smrt1', 'X')
+    pa2 = PlayerSmart('smrt2', 'O')
+    Game().play([pa1, pa2])
