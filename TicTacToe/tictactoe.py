@@ -194,8 +194,8 @@ class Board:
     def __repr__(self):
         return str(self.board)
 
-
-    def encode(self, winner):
+    @staticmethod
+    def encode(board_list, marker):
         """
         returns a int representation of the board that is encoded
         from the persepective of the marker specified, it is expected to be
@@ -206,7 +206,7 @@ class Board:
 
         start by a (size)^2 digit base three number:
             empty = 0
-            winner = 1
+            marker/winner = 1
             other = 2
         positions are (0,0), (0,1), ..., (0,n), (1,0), ..., (n,n)
 
@@ -215,12 +215,21 @@ class Board:
         # xlation = {EMPTY: '0', X: '1', O: '2'}
         # since I am not keeping track of the marker other than winner use else
         base3_str = ''
-        for row in range(self.size):
-            for col in range(self.size):
+        # for row in range(len(board_list)):
+        #     for col in range(len(board_list)):
+        #         #base3_str += xlation[self.board[row][col]]
+        #         if board_list[row][col] == EMPTY:
+        #             base3_str += '0'
+        #         elif board_list[row][col] == marker:
+        #             base3_str += '1'
+        #         else: # expected to be the loser marker
+        #             base3_str += '2'
+        for row in board_list:
+            for location in row:
                 #base3_str += xlation[self.board[row][col]]
-                if self.board[row][col] == EMPTY:
+                if location == EMPTY:
                     base3_str += '0'
-                elif self.board[row][col] == winner:
+                elif location == marker:
                     base3_str += '1'
                 else: # expected to be the loser marker
                     base3_str += '2'
@@ -246,6 +255,8 @@ class Player():
         """
         self.marker = marker
         self.name = name
+        # since we use random, lets seed it now
+        random.seed()
 
     def move(self, board):
         """
@@ -263,6 +274,44 @@ class Player():
 
     def __repr__(self):
         return 'Player({}-{})'.format(self.name, self.marker)
+
+
+class PlayerData(Player):
+    """
+    represents a player using the history
+    """
+    def __init__(self, name, marker, winning_moves):
+        """
+        winning moves is result of series of games
+          (s.winning_moves)
+        """
+        self.marker = marker
+        self.name = name
+
+        # list of list elem [(board_encoding, (mv_x,mv_y)), count]
+        self._move_summary = [[x, winning_moves.count(x)] for x in set(winning_moves)]
+
+
+
+    def move(self, board):
+        # assume winning_moves is set
+
+        #sublist of the moves for this board
+        board_encoding = Board.encode(board.board, self.marker)
+
+        # dict of move to count
+        # guarenteed an available move since it is based on the board state
+        move_scores = {x[0][1]: x[1] for x in self._move_summary if x[0][0] == board_encoding}
+
+        # if data provides no moves to score call the super method
+        if not move_scores:
+            return super().move(board)
+
+        # takes the max from the dict
+        move = max(move_scores, key=lambda k: move_scores[k])
+
+        # now get the one with the highest count board_summary[x][*]
+        return board.place_marker(move, self.marker)
 
 
 class PlayerSmart(Player):
@@ -497,7 +546,54 @@ class Game():
         return self.board.history
 
 
+    def encode_win(self):
+        """
+        on a completed game with a winner
+        returns tuple  the board status with winner-encoding (winning mark is 1)
+        along with the move that was made
+        """
+        if not self.winner:
+            # draw returns empty list
+            return []
 
+        return [(Board.encode(turn[2], turn[0]), turn[1])
+                for turn in self.history()
+                if turn[0] == self.winner.marker]
+
+class Record:
+    def __init__(self):
+        self.player1 = 0
+        self.player2 = 0
+        self.draw = 0
+    def __repr__(self):
+        return 'player1 {}, player2 {}, draw {}'.format(self.player1, self.player2, self.draw)
+
+
+class Series:
+    def __init__(self, players=None):
+        self.game = Game()
+        if players:
+            self.player1 = players[0]
+            self.player2 = players[1]
+        else:
+            self.player1 = Player('random1', 'X')
+            self.player2 = Player('random2', 'O')
+        self.record = Record()
+        self.winning_moves = []
+
+    def run(self, count=1):
+        for run_number in range(count):
+            self.game.reset()
+            self.game.play([self.player1, self.player2], trace=False)
+            self.winning_moves += self.game.encode_win()
+
+            if not self.game.winner:
+                self.record.draw += 1
+            elif self.game.winner.marker == 'X':
+                self.record.player1 += 1
+            elif self.game.winner.marker == 'O':
+                self.record.player2 += 1
+        print(self.record)
 
 
 def TicTacToe(mode=MODE, **args):
@@ -526,10 +622,18 @@ if __name__ == '__main__':
     #             opts[args[i][1:]] = args[i+1]
     #         trace(opts)
     #         apply(TicTacToe, (), opts).mainloop()
+    record = Record()
     p1 = Player('rand1', 'X')
     p2 = Player('rand2', 'O')
-    Game().play([p1, p2])
+    series = Series([p1, p2])
+    series.run(100000)
 
-    pa1 = PlayerSmart('smrt1', 'X')
-    pa2 = PlayerSmart('smrt2', 'O')
-    Game().play([pa1, pa2])
+    d1 = PlayerData('data1', 'X', series.winning_moves)
+    # Game().play([d1, p2])
+
+    # series against trained opponent
+    series2 = Series([d1, p2])
+    series2.run(1000)
+    # pa1 = PlayerSmart('smrt1', 'X')
+    # pa2 = PlayerSmart('smrt2', 'O')
+    # Game().play([pa1, pa2])
