@@ -2,295 +2,46 @@
 # -*- coding: utf-8 -*-
 """
 Tic Tac Toe OO game
+
+Base Player class is in game module
+
 """
 import logging
 import random
-import sys
-import copy
-import itertools
 
+from board import Board
+from game import Player
+from game import Series
+# from .game import Game
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
 
 MODE = None
-#X, O, EMPTY = 'X', 'O', ' '
-EMPTY = ' '
 
-
-class Board:
-    """
-    object represents the board with X, O markers
-    """
-
-    def __init__(self, board=None, size=3):
-        self.size = size
-        # how do I make this more pythonic?
-        if board:
-            self.board = board
-        else:
-            self.board = []
-            for _ in range(size):
-                self.board.append([0] * size)
-        self.clear()
-
-
-    def clear(self):
-        """
-        clears the board
-        """
-        self.history = []
-        # this will be a list of tuples 'mark', 'move', 'board' (at start)
-
-        for col in range(self.size):
-            for row in range(self.size):
-                self.board[col][row] = EMPTY
-
-
-    def place_marker(self, position, marker):
-        """
-        position is tuple of (col, row)
-
-        return True if move is possible, False if not
-           either position is taken or invalid range
-        """
-        (col, row) = position
-        if not col in range(self.size) \
-           or not row in range(self.size):
-            # index out of range
-            return False
-
-        if self.board[col][row] == EMPTY:
-            # self.history.append((marker, (col, row), self.encode()))
-            self.history.append((marker, (col, row), copy.deepcopy(self.board)))
-            self.board[col][row] = marker
-            return True
-
-        # else position is taken
-        return False
-
-    def is_win(self, marker):
-        """
-        returns true if the provider marker is
-        in a victory condition (across, down or diagonal)
-        """
-        # check across
-        for row in self.board:
-            if row.count(marker) == self.size:
-                return True
-
-        for ndx in range(self.size):
-            # check to see if everything in this column matches mark
-            if all(map(lambda col: self.board[col][ndx] == marker, range(self.size))):
-                return True
-
-        # check diagonals 0,0 1,1 2,2 :   col = row
-        if all(map(lambda ndx: self.board[ndx][ndx] == marker, range(self.size))):
-            return True
-
-        # check diagonals 0,2  1,1  2,0 :  col + row = (size-1)  [or row = (size-1) - col]
-        if all(map(lambda ndx: self.board[ndx][(self.size - 1) - ndx] == marker, range(self.size))):
-            return True
-
-        return False
-
-
-    def has_open_position(self):
-        """
-        return True if there is an open position
-
-        if not Board.open_position():
-            # this is a tie
-            # (assuming no winner has been detected)
-
-        to be a draw, there must be no available
-        AFTER the win and loss checks occur
-        """
-        for row in self.board:
-            if EMPTY in row:
-                return True
-        return False
-
-
-    def list_open_positions(self):
-        """
-        returns a list(generator) of coordinate tuples for the board
-        locations that are open
-        """
-        # return_list = []
-        # for row in range(self.size):
-        #     for col in range(self.size):
-        #         if self.board[row][col] == EMPTY:
-        #             location = (row, col)
-        #             return_list.append(location)
-        # return return_list
-        for row in range(self.size):
-            for col in range(self.size):
-                if self.board[row][col] == EMPTY:
-                    position = (row, col)
-                    yield position
-
-    def count_across_down(self):
-        """
-        Used by scoring algorithms
-        for each row, col count the number of marks (for each player)
-        """
-        count_rows = {}
-        count_cols = {}
-        for row, col in itertools.product(range(self.size), range(self.size)):
-            mark = self.board[row][col]
-            try:
-                count_rows[(row, mark)] = count_rows[(row, mark)] + 1
-            except KeyError:
-                count_rows[(row, mark)] = 1
-            try:
-                count_cols[(col, mark)] = count_cols[(col, mark)] + 1
-            except KeyError:
-                count_cols[(col, mark)] = 1
-        return count_rows, count_cols
-
-
-    def count_diagonal(self):
-        """
-        Used by scoring algorithms
-        provides counts of the diagonal for each mark(player)
-        """
-        # tally = { mark:X: 0, O: 0, EMPTY: 0}
-        # count_diag1 = count_diag2 = tally.copy()
-        count_diag1 = count_diag2 = {}
-        for ndx in range(self.size):
-            # diag1 (0,0) (1,1) (2,2)
-            mark = self.board[ndx][ndx]
-            count_diag1[mark] = count_diag1.get(mark, 0) + 1
-
-            # diag2 (0,2) (1,1) (2,0)
-            mark = self.board[ndx][(self.size - 1) - ndx]
-            count_diag2[mark] = count_diag2.get(mark, 0) + 1
-        return count_diag1, count_diag2
-
-    def get_markers(self):
-        """
-        returns a list of the markers that are on the board
-        at most it will be 2 element list, it could be 1 if only one player moved
-        or 0 if the board is clear
-        """
-        marker_list = []
-        for row, col in itertools.product(range(self.size), range(self.size)):
-            if self.board[row][col] != EMPTY and self.board[row][col] not in marker_list:
-                marker_list.append(self.board[row][col])
-            if len(marker_list) > 1:
-                # there can be at most two differnt markers
-                break
-        return marker_list
-
-
-
-    def __str__(self):
-        rows = map((lambda row: '\n\t' + str(row)), self.board)
-        # return string.join(rows)
-        return ''.join(rows)
-
-
-    def __repr__(self):
-        return str(self.board)
-
-    @staticmethod
-    def encode(board_list, marker):
-        """
-        returns a int representation of the board that is encoded
-        from the persepective of the marker specified, it is expected to be
-        the winner players, and store the board configurations from the persepective
-        of the winning player to make predictions
-
-        Draws are ??? ignored for now, since I would need to pick a marker
-
-        start by a (size)^2 digit base three number:
-            empty = 0
-            marker/winner = 1
-            other = 2
-        positions are (0,0), (0,1), ..., (0,n), (1,0), ..., (n,n)
-
-        this should only be called after there is a winner
-        """
-        # xlation = {EMPTY: '0', X: '1', O: '2'}
-        # since I am not keeping track of the marker other than winner use else
-        base3_str = ''
-        # for row in range(len(board_list)):
-        #     for col in range(len(board_list)):
-        #         #base3_str += xlation[self.board[row][col]]
-        #         if board_list[row][col] == EMPTY:
-        #             base3_str += '0'
-        #         elif board_list[row][col] == marker:
-        #             base3_str += '1'
-        #         else: # expected to be the loser marker
-        #             base3_str += '2'
-        for row in board_list:
-            for location in row:
-                #base3_str += xlation[self.board[row][col]]
-                if location == EMPTY:
-                    base3_str += '0'
-                elif location == marker:
-                    base3_str += '1'
-                else: # expected to be the loser marker
-                    base3_str += '2'
-        # returns this string representation of base 3
-        return int(base3_str, 3)
-
-
-class Player():
-    """
-    represents a random player
-
-    a player shouldn't have a marker? or should they
-
-    made this a super class and sub with real person and various AI's
-    """
-
-    def __init__(self, name, marker):
-        """
-        it is expected to be either 'X' or 'O' for this game,
-        as long as the two players have separate markers
-
-        We have name so that we can use different implementations X or O
-        """
-        self.marker = marker
-        self.name = name
-        # since we use random, lets seed it now
-        random.seed()
-
-    def move(self, board):
-        """
-        return true if the move is made
-         otherwise return false if unable to move
-        """
-        #return board.place_marker((0, 0), self.marker)
-        open_moves = list(board.list_open_positions())
-        if open_moves:
-            move = random.choice(open_moves)
-            return board.place_marker(move, self.marker)
-        # else no open moves
-        return False
-
-
-    def __repr__(self):
-        return 'Player({}-{})'.format(self.name, self.marker)
 
 
 class PlayerData(Player):
     """
     represents a player using the history
     """
-    def __init__(self, name, marker, winning_moves):
+    def __init__(self, marker, winning_moves):
         """
         winning moves is result of series of games
           (s.winning_moves)
         """
         self.marker = marker
-        self.name = name
 
         # list of list elem [(board_encoding, (mv_x,mv_y)), count]
-        self._move_summary = [[x, winning_moves.count(x)] for x in set(winning_moves)]
+        move_scores = [(x, winning_moves.count(x)) for x in set(winning_moves)]
+        #_move_summary =
 
+        board_set = {board_move[0] for  board_move in winning_moves}
+
+        self._move_data = {}
+        for board in board_set:
+            move_summary = {x[0][1]: x[1] for x in move_scores if x[0][0] == board}
+            self._move_data[board] = max(move_summary, key=lambda k: move_summary[k])
 
 
     def move(self, board):
@@ -298,20 +49,13 @@ class PlayerData(Player):
 
         #sublist of the moves for this board
         board_encoding = Board.encode(board.board, self.marker)
-
-        # dict of move to count
-        # guarenteed an available move since it is based on the board state
-        move_scores = {x[0][1]: x[1] for x in self._move_summary if x[0][0] == board_encoding}
+        data_driven_move = self._move_data.get(board_encoding)
 
         # if data provides no moves to score call the super method
-        if not move_scores:
+        if not data_driven_move:
             return super().move(board)
 
-        # takes the max from the dict
-        move = max(move_scores, key=lambda k: move_scores[k])
-
-        # now get the one with the highest count board_summary[x][*]
-        return board.place_marker(move, self.marker)
+        return board.place_marker(data_driven_move, self.marker)
 
 
 class PlayerSmart(Player):
@@ -324,11 +68,11 @@ class PlayerSmart(Player):
         open_moves = list(board.list_open_positions())
         for move in open_moves:
             if self._is_win(move, board):
-                return move
+                return board.place_marker(move, self.marker)
 
         for move in open_moves:
             if self._is_block(move, board):
-                return move
+                return board.place_marker(move, self.marker)
 
         # let's score them
         #   try to adjust scoring,  if player moves first
@@ -347,7 +91,7 @@ class PlayerSmart(Player):
             if score > best:
                 pick = move
                 best = score
-        return pick
+        return board.place_marker(pick, self.marker)
 
     # def _count_across_down(self):
     #     """
@@ -392,7 +136,7 @@ class PlayerSmart(Player):
         board.board[row][col] = self.marker
         # trace(self.board)
         is_win = board.is_win(self.marker)
-        board.board[row][col] = EMPTY
+        board.board[row][col] = Board.EMPTY
         # trace(self.board)
         return is_win
 
@@ -407,7 +151,7 @@ class PlayerSmart(Player):
             opponent_mark = marker_list[0]
             board.board[row][col] = opponent_mark
             is_loss = board.is_win(opponent_mark)
-            board.board[row][col] = EMPTY
+            board.board[row][col] = Board.EMPTY
             return is_loss
         return False
 
@@ -432,168 +176,16 @@ class PlayerSmart(Player):
             count_diag1.get(opponent_marker, 0) * 10 +
             count_diag2.get(opponent_marker, 0) * 10
             +
-            count_cols.get((col, EMPTY), 0) * 11 +
-            count_rows.get((row, EMPTY), 0) * 11 +
-            count_diag1.get(EMPTY, 0) * 11 +
-            count_diag2.get(EMPTY, 0) * 11
+            count_cols.get((col, Board.EMPTY), 0) * 11 +
+            count_rows.get((row, Board.EMPTY), 0) * 11 +
+            count_diag1.get(Board.EMPTY, 0) * 11 +
+            count_diag2.get(Board.EMPTY, 0) * 11
         )
 
     def __repr__(self):
-        return 'SmartPlayer({}-{})'.format(self.name, self.marker)
+        return 'SmartPlayer({})'.format(self.marker)
 
 
-
-class Game():
-    """
-    a board, and set of rules
-     method play takes the players and runs the game
-
-    two players and a board
-
-    """
-
-    def __init__(self):
-        """
-        moved player array into play scope
-
-        sets up board and winner
-        maybe add history of winners/losers
-        """
-        self.board = Board()
-        #self.player1 = player1
-        #self.player2 = player2
-        self.winner = None
-
-
-
-    #def play(self, player1, player2, trace=True):
-    def play(self, players, trace=True):
-        """
-        trace option to draw the screen after each move (otherwise no display)
-
-
-        # FIXME: make players a list
-
-        A player will always have a .move(board) method
-        that will update the board and return True, otherwise
-        if unable to update the board returns False
-
-        this will run until either one of the players is
-        declared a winner by the Board.is_win() method OR
-        the Board.has_open_postion() method returns False
-
-        at this thme the Game.winner attribute will be set
-        to the winning player
-        """
-        method = 'play():'
-        player1 = players[0]
-        player2 = players[1]
-        if player1.marker == player2.marker:
-            LOGGER.error('%sboth players can not have the same marker "%s"',
-                         method, player1.marker)
-            return
-
-        while self.board.has_open_position():
-            if not player1.move(self.board) or \
-               self.board.is_win(player1.marker):
-                break
-
-            if trace:
-                print(self.board)
-
-            if not player2.move(self.board) or \
-               self.board.is_win(player2.marker):
-                break
-
-            if trace:
-                print(self.board)
-
-            # for player in players:
-            #     if not player.move(self.board) or \
-            #         self.board.is_win(player.marker):
-            #         break
-
-        if trace and self.board.has_open_position():
-            print(self.board)
-
-        if self.board.is_win(player1.marker):
-            self.winner = player1
-        elif self.board.is_win(player2.marker):
-            self.winner = player2
-        else:
-            # no open positions, and no winner, it's a draw
-            self.winner = None
-
-        # self.winner = None
-        # for player in players:
-        #     if self.board.is_win(player.marker)
-        #         self.winner = player
-        #         break
-
-
-    def reset(self):
-        """
-        resets the game (a new board and clears winner)
-        """
-        self.board = Board()
-        self.winner = None
-
-
-    def history(self):
-        """
-        returns the history of the game
-        """
-        return self.board.history
-
-
-    def encode_win(self):
-        """
-        on a completed game with a winner
-        returns tuple  the board status with winner-encoding (winning mark is 1)
-        along with the move that was made
-        """
-        if not self.winner:
-            # draw returns empty list
-            return []
-
-        return [(Board.encode(turn[2], turn[0]), turn[1])
-                for turn in self.history()
-                if turn[0] == self.winner.marker]
-
-class Record:
-    def __init__(self):
-        self.player1 = 0
-        self.player2 = 0
-        self.draw = 0
-    def __repr__(self):
-        return 'player1 {}, player2 {}, draw {}'.format(self.player1, self.player2, self.draw)
-
-
-class Series:
-    def __init__(self, players=None):
-        self.game = Game()
-        if players:
-            self.player1 = players[0]
-            self.player2 = players[1]
-        else:
-            self.player1 = Player('random1', 'X')
-            self.player2 = Player('random2', 'O')
-        self.record = Record()
-        self.winning_moves = []
-
-    def run(self, count=1):
-        for run_number in range(count):
-            self.game.reset()
-            self.game.play([self.player1, self.player2], trace=False)
-            self.winning_moves += self.game.encode_win()
-
-            if not self.game.winner:
-                self.record.draw += 1
-            elif self.game.winner.marker == 'X':
-                self.record.player1 += 1
-            elif self.game.winner.marker == 'O':
-                self.record.player2 += 1
-        print(self.record)
 
 
 def TicTacToe(mode=MODE, **args):
@@ -607,7 +199,12 @@ def TicTacToe(mode=MODE, **args):
     #     print('Bad -mode flag value:', mode)
     # return apply(eval(classname), (), args)
 
-if __name__ == '__main__':
+
+
+def main():
+    """
+    test method to call when invoked from main
+    """
     # if len(sys.argv) == 1:
     #     TicTacToe().mainloop()
     # else:
@@ -622,18 +219,21 @@ if __name__ == '__main__':
     #             opts[args[i][1:]] = args[i+1]
     #         trace(opts)
     #         apply(TicTacToe, (), opts).mainloop()
-    record = Record()
-    p1 = Player('rand1', 'X')
-    p2 = Player('rand2', 'O')
-    series = Series([p1, p2])
+    series = Series()
     series.run(100000)
 
-    d1 = PlayerData('data1', 'X', series.winning_moves)
+    px = PlayerData('X', series.winning_moves)
     # Game().play([d1, p2])
 
     # series against trained opponent
-    series2 = Series([d1, p2])
+    series2 = Series()
     series2.run(1000)
+    po = PlayerData('O', series2.winning_moves)
     # pa1 = PlayerSmart('smrt1', 'X')
     # pa2 = PlayerSmart('smrt2', 'O')
     # Game().play([pa1, pa2])
+
+
+
+if __name__ == '__main__':
+    main()
