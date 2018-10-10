@@ -25,7 +25,7 @@ class Board:
     """
 
 
-    def __init__(self, board=None, size=3):
+    def __init__(self, board=None, size=8):
         """
         initializes a board
 
@@ -34,7 +34,7 @@ class Board:
         self.size = size
         # how do I make this more pythonic?
         if board:
-            self.board = board
+            self.board = board.board.copy()
         else:
             self.board = []
             for _ in range(size):
@@ -51,32 +51,40 @@ class Board:
 
         for col in range(self.size):
             for row in range(self.size):
-                self.board[col][row] = Board.EMPTY
+                self.board[row][col] = Board.EMPTY
 
+    def _col(self, col):
+        return list(map(lambda ndx: self.board[ndx][col], range(self.size)))
 
-    def place_marker(self, position, marker):
+    def place_marker(self, col, marker):
         """
-        position is tuple of (col, row)
+        position is int of col
 
         return True if move is possible, False if not
            either position is taken or invalid range
         """
-        (col, row) = position
-        if not col in range(self.size) \
-           or not row in range(self.size):
+        if not col in range(self.size):
             # index out of range
             return False
 
-        if self.board[col][row] == Board.EMPTY:
+        if Board.EMPTY not in self._col(col):
+            print('# the column is full')
+            return False
+
+        # depth to go on the row
+        row = len(list(filter(lambda x: x == Board.EMPTY, self._col(col)))) - 1
+        print('using (col,row) ({},{})'.format(col, row))
+
+        if self.board[row][col] == Board.EMPTY:
             # self.history.append((marker, (col, row), self.encode()))
-            self.history.append((marker, (col, row), copy.deepcopy(self.board)))
-            self.board[col][row] = marker
+            self.history.append((marker, col, copy.deepcopy(self.board)))
+            self.board[row][col] = marker
             return True
 
         # else position is taken
         return False
 
-    def is_win(self, marker):
+    def is_win(self, marker, connect_win=4):
         """
         returns true if the provider marker is
         in a victory condition (across, down or diagonal)
@@ -86,8 +94,23 @@ class Board:
             if row.count(marker) == self.size:
                 return True
 
-        for ndx in range(self.size):
-            # check to see if everything in this column matches mark
+        # check rows and columns in same loop
+        for ndx, row in enumerate(self.board):
+            # check across
+            series = [row[ndx2:ndx2+connect_win] for ndx2 in range(self.size-connect_win)]
+            for seq in series:
+                if seq.count(marker) == connect_win:
+                    return True
+
+            # check the columns
+            c = self._col(ndx)
+            series = [c[ndx2:ndx2+connect_win] for ndx2 in range(self.size-connect_win)]
+            for seq in series:
+                if seq.count(marker) == connect_win:
+                    return True
+
+
+
             if all(map(lambda col: self.board[col][ndx] == marker, range(self.size))):
                 return True
 
@@ -155,6 +178,21 @@ class Board:
             except KeyError:
                 count_cols[(col, mark)] = 1
         return count_rows, count_cols
+
+    def _diagonals(self):
+        """
+        Gets list of all diagonal lists
+
+        this is down and to the right
+        """
+        diagonals = []
+        for ndx in range(self.size):
+            diagonals.append([self.board[x][x+ndx] for x in range(self.size - ndx)])
+            # otherwise we double count
+            if ndx != 0:
+                diagonals.append([self.board[x][x-ndx] for x in range(ndx, self.size)])
+
+        return diagonals
 
 
     def count_diagonal(self):
