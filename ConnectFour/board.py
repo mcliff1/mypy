@@ -193,7 +193,18 @@ class Board:
                 diagonals.append([self.board[x][x-ndx] for x in range(ndx, self.size)])
 
         return diagonals
-
+        # row,column
+        #(0,0)
+        #(1,0) (0,1)
+        #(2,0) (1,1) (0,2)
+        #..
+        #(7,0) (6,1) (5,2) .. (1,6) (0,7)
+        #(7,1) (6,2) (5,3) .. (1,7)
+        #(7,2) (6,3), (5,4) .. (2,7)
+        # ..
+        #(7,7)
+        self.board[ndx-x][x] for x in  range(ndx+1)]  ndx 0..7
+        self.board[(size-1+ndx)-x][x] for x in range(ndx, size)] ndx 1..7
 
     def count_diagonal(self):
         """
