@@ -57,18 +57,25 @@ def crash():
 
     # game_loop()  # not sure this needs to be here
 
+def new_thing_position():
+    """
+    creates a new thing's x,y tuple
+    """
+    new_x = random.randrange(0, display_width - 100)
+    new_y = 0
+    return (new_x, new_y)
+
 
 def game_loop():
     car_x = (display_width) * .45
     car_y = (display_height) * .8
     x_change = 0
-    car_speed = 0
+    car_speed = 5
     #crashed = False
 
     thing_w = 100
     thing_h = 100
-    thing_x = random.randrange(0, display_width)
-    thing_y = thing_h
+    thing_x, thing_y = new_thing_position()
     thing_speed = 7
 
 
@@ -84,9 +91,9 @@ def game_loop():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    x_change = -5
+                    x_change = -1 * car_speed
                 elif event.key == pygame.K_RIGHT:
-                    x_change = 5
+                    x_change = car_speed
                 elif event.key == pygame.K_q:
                     game_exit = True
             if event.type == pygame.KEYUP:
@@ -104,8 +111,16 @@ def game_loop():
             crash()
 
         if thing_y > display_height:
-            thing_y = thing_h
-            thing_x = random.randrange(0, display_width - thing_w)
+            thing_x, thing_y = new_thing_position()
+            # thing_y = thing_h
+            # thing_x = random.randrange(0, display_width - thing_w)
+
+        if car_y < thing_y + thing_h:
+            if car_x > thing_x and car_x < thing_x + thing_w or \
+               car_x + car_width > thing_x and car_x + car_width < thing_x + thing_w:
+                # make a new thing
+                thing_x, thing_y = new_thing_position()
+                crash()
 
         pygame.display.update()   # or .flip()
         clock.tick(30)   # frames per second (this is 60 in the web version)
