@@ -94,6 +94,14 @@ def game_loop():
                     x_change = -1 * car_speed
                 elif event.key == pygame.K_RIGHT:
                     x_change = car_speed
+
+
+                    4
+                    4
+                elif event.key == pygame.K_DOWN:
+                    thing_speed += -1
+                elif event.key == pygame.K_UP:
+                    thing_speed += 1
                 elif event.key == pygame.K_q:
                     game_exit = True
             if event.type == pygame.KEYUP:
