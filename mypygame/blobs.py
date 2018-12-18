@@ -35,8 +35,8 @@ class Blob():
         self.x_position += self.x_velocity
         self.y_position += self.y_velocity
 
-        self.x_velocity += random.randint(-1, 1)
-        self.y_velocity += random.randint(-1, 1)
+        self.x_velocity += random.randint(0, 1) * (-1, 1)[self.x_velocity < 0]
+        self.y_velocity += random.randint(0, 1) * (-1, 1)[self.y_velocity < 0]
 
         self.x_position = max(self.x_position, 0)
         self.y_position = max(self.y_position, 0)
@@ -60,6 +60,9 @@ class Blob():
         toggles the color and changes size accordingly
         """
         print('Yeah: color {}'.format(self.color))
+
+        self.x_velocity = -1 * self.x_velocity
+        self.y_velocity = -1 * self.y_velocity
 
         self.color = RED if self.color == BLUE else BLUE
 
