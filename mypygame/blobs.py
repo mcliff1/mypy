@@ -1,8 +1,8 @@
 """
 My version of the game of life
 """
-
 import pygame
+import random
 
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -16,6 +16,9 @@ class Blob():
         self.color = color
         self.size = size
 
+    def move(self):
+        self.x += random.randint(-10,10)
+        self.y += random.randint(-10,10)
 
 
 
@@ -36,7 +39,7 @@ def main(caption):
         _center = [blob.x, blob.y]
         pygame.draw.circle(screen, blob.color, _center, blob.size, 0) # 0 width is filled
 
-    blob = Blob([50, 50])
+    blobs = [Blob([30*x, 50]) for x in range(1, 5)]
 
     exit_loop = False
     while not exit_loop:
@@ -50,7 +53,12 @@ def main(caption):
         screen.fill(WHITE)
 
         #pygame.draw.line(screen, GREEN, [0, 0], [50, 30], 5)
-        draw(blob)
+        for blob in blobs:
+            draw(blob)
+            blob.move()
+        #map(draw, blobs)
+
+
 
         pygame.display.update()   # or .flip()
         clock.tick(frames_per_second)   # frames per second (this is 60 in the web version)
