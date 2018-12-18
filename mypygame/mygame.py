@@ -1,5 +1,9 @@
 """
 My first PyGame project; a simple race car - thanks sentdex
+
+Note- making pylint work with PyGame
+https://stackoverflow.com/questions/28437071/pylint-1-4-reports-e1101no-member-on-all-c-extensions
+
 """
 import pygame
 import time
