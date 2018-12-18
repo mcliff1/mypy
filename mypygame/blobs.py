@@ -5,13 +5,16 @@ My version of the game of life
 import pygame
 
 WHITE = (255, 255, 255)
+RED = (255, 0, 0)
 GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
 
 class Blob():
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.color = GREEN
+    def __init__(self, position=(0, 0), size=10, color=RED):
+        self.x = position[0]
+        self.y = position[1]
+        self.color = color
+        self.size = size
 
 
 
@@ -30,11 +33,10 @@ def main(caption):
 
     def draw(blob):
         #game.draw.line(screen, GREEN, [0,0], [50, 30], 5)
-        _to = [blob.x, blob.y]
-        _from = [blob.x + 50, blob.y + 50]
-        pygame.draw.line(screen, GREEN, _to, _from, 5)
+        _center = [blob.x, blob.y]
+        pygame.draw.circle(screen, blob.color, _center, blob.size, 0) # 0 width is filled
 
-    blob = Blob()
+    blob = Blob([50, 50])
 
     exit_loop = False
     while not exit_loop:
