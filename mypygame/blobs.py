@@ -3,6 +3,7 @@ My version of the game of life
 """
 import random
 import itertools
+import uuid
 
 import pygame
 
@@ -19,6 +20,7 @@ class Blob():
     Unit in the Game of Life
     """
     def __init__(self, position=(0, 0), size=10, color=RED):
+        self.name = uuid.uuid4()
         self.x_position = position[0]
         self.y_position = position[1]
 
@@ -59,7 +61,7 @@ class Blob():
         """
         toggles the color and changes size accordingly
         """
-        print('Yeah: color {}'.format(self.color))
+        #print('Yeah: color {}'.format(self.color))
 
         self.x_velocity = -1 * self.x_velocity
         self.y_velocity = -1 * self.y_velocity
@@ -75,12 +77,23 @@ class Blob():
         if self.size < 1:
             self.size = 1
 
+    def __repr__(self):
+        return 'Blob[(' + ','.join([str(self.x_position), str(self.y_position)]) + ')' + \
+               ', velocity=(' + ','.join([str(self.x_velocity), str(self.y_velocity)]) + ')' + \
+               ', size=' + str(self.size) + \
+               ', color=' + str(self.color) + \
+               ']'
+
+def _random_position():
+    """ returns random tuple in display range """
+    return (random.randint(0, DISPLAY_WIDTH), random.randint(0, DISPLAY_HEIGHT))
+
 
 def init_blobs(count=10, color=RED):
     """
     creates a count of new Blobs
     """
-    return [Blob([random.randint(0, DISPLAY_WIDTH), random.randint(0, DISPLAY_HEIGHT)], color=color) for x in range(1, count)]
+    return [Blob(_random_position(), color=color) for x in range(1, count)]
 
 
 
@@ -88,7 +101,7 @@ def main(caption):
     """
     main game loop
     """
-    frames_per_second = 30
+    frames_per_second = 5
     pygame.init()
     screen = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
     pygame.display.set_caption(caption)
@@ -110,6 +123,18 @@ def main(caption):
                 exit_loop = True
 
 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    # make a new red blob
+                    print('making a new red blob')
+                    blobs.append(Blob(_random_position(), color=RED))
+                if event.key == pygame.K_RIGHT:
+                    # make a new red blob
+                    print('making a new blue blob')
+                    blobs.append(Blob(_random_position(), color=BLUE))
+
+
+
         screen.fill(WHITE)
 
         #pygame.draw.line(screen, GREEN, [0, 0], [50, 30], 5)
@@ -118,8 +143,9 @@ def main(caption):
             blob.move()
         #map(draw, blobs)
 
-        for pair in itertools.product(blobs, repeat=2):
+        for pair in [x for x in itertools.product(blobs, repeat=2) if x[0] != x[1]]:
             if pair[0].collides(pair[1]):
+                print('hit on {}'.format(pair))
                 pair[0].hit()
                 pair[1].hit()
 
