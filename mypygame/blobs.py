@@ -7,8 +7,7 @@ import uuid
 
 import pygame
 
-DISPLAY_WIDTH = 800
-DISPLAY_HEIGHT = 600
+DISPLAY = (800, 600)
 
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -21,11 +20,10 @@ class Blob():
     """
     def __init__(self, position=(0, 0), size=10, color=RED):
         self.name = uuid.uuid4()
-        self.x_position = position[0]
-        self.y_position = position[1]
 
-        self.x_velocity = 0
-        self.y_velocity = 0
+        self.position = position
+
+        self.velocity = [random.randint(-1, 1), random.randint(-1,1)]
 
         self.color = color
         self.size = size
@@ -34,16 +32,28 @@ class Blob():
         """
         moves the blob a step according to its velocity
         """
-        self.x_position += self.x_velocity
-        self.y_position += self.y_velocity
+        self.position = [sum(x) for x in zip(self.position, self.velocity)]
 
-        self.x_velocity += random.randint(0, 1) * (-1, 1)[self.x_velocity < 0]
-        self.y_velocity += random.randint(0, 1) * (-1, 1)[self.y_velocity < 0]
+        #self.x_velocity += random.randint(0, 1) * (-1, 1)[self.x_velocity < 0]
+        #self.y_velocity += random.randint(0, 1) * (-1, 1)[self.y_velocity < 0]
 
-        self.x_position = max(self.x_position, 0)
-        self.y_position = max(self.y_position, 0)
-        self.x_position = min(self.x_position, DISPLAY_WIDTH)
-        self.y_position = min(self.y_position, DISPLAY_HEIGHT)
+        if self.position[0] < self.size:
+            self.position[0] = self.size
+            self.velocity[0] = -1 * self.velocity[0]
+        if self.position[0] > DISPLAY[0] - self.size:
+            self.position[0] = DISPLAY[0] - self.size
+            self.velocity[0] = -1 * self.velocity[0]
+        if self.position[1] < self.size:
+            self.position[1] = self.size
+            self.velocity[1] = -1 * self.velocity[1]
+        if self.position[1] > DISPLAY[1] - self.size:
+            self.position[1] = DISPLAY[1] - self.size
+            self.velocity[1] = -1 * self.velocity[1]
+
+        # self.x_position = max(self.x_position, self.size)
+        # self.y_position = max(self.y_position, self.size)
+        # self.x_position = min(self.x_position, DISPLAY_WIDTH - self.size)
+        # self.y_position = min(self.y_position, DISPLAY_HEIGHT - self.size)
 
 
     def collides(self, blob):
@@ -52,21 +62,26 @@ class Blob():
         """
         # ideally use np norm but spell it out for now
         # delta_x^2 + delta_y^2 < (r_1+r_2)^2
-        delta_center_sq = (self.x_position - blob.x_position)**2 + \
-                          (self.y_position - blob.y_position)**2
+        delta_center_sq = (self.position[0] - blob.position[0])**2 + \
+                          (self.position[1] - blob.position[1])**2
         return delta_center_sq < (self.size + blob.size)**2
 
 
-    def hit(self):
+    def hit(self, target):
         """
         toggles the color and changes size accordingly
         """
         #print('Yeah: color {}'.format(self.color))
 
-        self.x_velocity = -1 * self.x_velocity
-        self.y_velocity = -1 * self.y_velocity
+        self.velocity += -1 * target.velocity
+        # self.velocity[1] += -1 * target.velocity[1]
 
-        self.color = RED if self.color == BLUE else BLUE
+        #self.velocity, target.velocity = -1 * target.velocity, -1 * self.velocity
+
+        # if they match, then change one
+        if self.color == target.color:
+            self.color = random.choice([RED, BLUE])
+            self.color = random.choice([RED, BLUE])
 
         if self.color == RED:
             self.size += 1
@@ -77,23 +92,37 @@ class Blob():
         if self.size < 1:
             self.size = 1
 
+    def calc_forces(self, blobs, const=1.0):
+        """
+        returns a vector of force,
+        with like color blobs being detractors and opposite color attractors
+        """
+        forces = []
+        for blob in blobs:
+            force_d = ((1.0 / (blob.position[0] - self.position[0]))**2,
+                       (1.0 / (blob.position[1] - self.position[1]))**2)
+            force_factor = const * blob.size**2
+            forces.append(force_factor * force_d)
+
     def __repr__(self):
-        return 'Blob[(' + ','.join([str(self.x_position), str(self.y_position)]) + ')' + \
-               ', velocity=(' + ','.join([str(self.x_velocity), str(self.y_velocity)]) + ')' + \
+        return 'Blob[name=' + str(self.name)[:6] + \
+               ', ' + str(self.position) + \
+               ', velocity=' + str(self.velocity) + \
                ', size=' + str(self.size) + \
                ', color=' + str(self.color) + \
                ']'
 
 def _random_position():
     """ returns random tuple in display range """
-    return (random.randint(0, DISPLAY_WIDTH), random.randint(0, DISPLAY_HEIGHT))
+    return (random.randint(0, DISPLAY[0]), random.randint(0, DISPLAY[1]))
 
 
 def init_blobs(count=10, color=RED):
     """
     creates a count of new Blobs
     """
-    return [Blob(_random_position(), color=color) for x in range(1, count)]
+    return [Blob(_random_position(), color=color, size=100) for x in range(1, count)]
+
 
 
 
@@ -103,19 +132,21 @@ def main(caption):
     """
     frames_per_second = 5
     pygame.init()
-    screen = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
+    screen = pygame.display.set_mode((DISPLAY[0], DISPLAY[1]))
     pygame.display.set_caption(caption)
     clock = pygame.time.Clock()
 
     def draw(blob):
         #game.draw.line(screen, GREEN, [0,0], [50, 30], 5)
-        _center = [blob.x_position, blob.y_position]
-        pygame.draw.circle(screen, blob.color, _center, blob.size, 0) # 0 width is filled
+        print(blob)
+        print(blob.position)
+        pygame.draw.circle(screen, blob.color, blob.position, blob.size, 0) # 0 width is filled
 
-    blobs = init_blobs(10)
+    blobs = init_blobs(3)
 
     exit_loop = False
     while not exit_loop:
+        #print('.')
         # check for exit condition
         for event in pygame.event.get():
             if event.type == pygame.QUIT or \
@@ -143,14 +174,12 @@ def main(caption):
             blob.move()
         #map(draw, blobs)
 
-        for pair in [x for x in itertools.product(blobs, repeat=2) if x[0] != x[1]]:
+        for pair in itertools.combinations(blobs, r=2):
+            #print('checking {}'.format(pair))
             if pair[0].collides(pair[1]):
-                print('hit on {}'.format(pair))
-                pair[0].hit()
-                pair[1].hit()
-
-
-
+                #print('hit on {}'.format(pair))
+                pair[0].hit(pair[1])
+                #pair[1].hit(pair[0])
 
         pygame.display.update()   # or .flip()
         clock.tick(frames_per_second)   # frames per second (this is 60 in the web version)
