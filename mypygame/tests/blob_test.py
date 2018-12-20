@@ -48,11 +48,52 @@ def test_blob_move_walls():
 
 
 
-def test_blob_forces():
+def test_blob_distance():
     """
     tests the force calculation of a blob
     """
     blob = blobs.Blob(position=(10, 10), size=5)
+    assert blob.distance((20, 10)) == 10
+
+    # test a diagonal
+    assert blob.distance((13, 14)) == 5
+    assert blob.distance((40, 50)) == 50 #sqrt (900 + 1600) = sqrt(2500)= 50
+
+    # go the other directions
+    assert blob.distance((20, 10)) == 10
+    assert blob.distance((10, 3)) == 7
+    assert blob.distance((10, 55)) == 45
+
+
+def test_blob_forces():
+    """
+    tests the force calculation of a blob
+    """
+
+    # distance is 10;
+    #  magnitude should be 5**2 / 10**2 = (1/2)**2 = 1/4
+    #  direction is (1,0)
+    blob = blobs.Blob(position=(10, 10), size=5)
     blob2 = blobs.Blob(position=(20, 10), size=5)
-    distance = blob.distance(blob2.position)
-    assert distance is not None
+    blob3 = blobs.Blob(position=(0, 10), size=5)
+    blob4 = blobs.Blob(position=(10, 20), size=5)
+    blob2blue = blobs.Blob(position=(20, 10), size=5, color=(0, 0, 255))
+    blob3blue = blobs.Blob(position=(0, 10), size=5, color=(0, 0, 255))
+    blob4blue = blobs.Blob(position=(10, 20), size=5, color=(0, 0, 255))
+
+    force = blob.cf2([blob2])
+    assert force == (-0.25, 0.0)
+
+    force = blob.cf2([blob4])
+    assert force == (0.0, -0.25)
+
+
+    force = blob.cf2([blob2blue])
+    assert force == (0.25, 0.0)
+
+
+    force = blob.cf2([blob3])
+    assert force == (0.25, 0.0)
+
+    force = blob.cf2([blob2, blob3])
+    assert force == (0.0, 0.0)

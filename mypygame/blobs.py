@@ -110,15 +110,26 @@ class Blob():
         """ distance between center of this blob and the given position """
         return math.sqrt((self.position[0] - position[0])**2 + (self.position[1] - position[1])**2)
 
-    def direction(self, position):
+    def direction(self, position, norm=1.0):
         """ returns the direction vector from the center of this blob to the position """
-        return (position[0] - self.position[0], position[1] - self.position[1])
+        factor = norm / self.distance(position)
+        # TODO - how do I make this pythonic?
+        return ( factor * (position[0] - self.position[0]), factor * (position[1] - self.position[1]) )
 
     def cf2(self, blobs, const=1.0):
         """
         forces is equal to sum of size^2/distance^2
         """
-        return
+        force = (0.0, 0.0)
+        for blob in blobs:
+            distance = self.distance(blob.position)
+            magnitude = const * blob.size**2 / distance**2
+            if self.color == blob.color:
+                magnitude *= -1.0
+            direction = self.direction(blob.position, norm=magnitude)
+            force = tuple(sum(x) for x in zip(force, direction))
+            #force.append(direction)
+        return force
 
     def __repr__(self):
         return 'Blob[name=' + str(self.name)[:6] + \
