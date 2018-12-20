@@ -18,12 +18,12 @@ class Blob():
     """
     Unit in the Game of Life
     """
-    def __init__(self, position=(0, 0), size=10, color=RED):
+    def __init__(self, position=(0, 0), velocity=(0, 0), size=10, color=RED):
         self.name = uuid.uuid4()
 
         self.position = position
-
-        self.velocity = [random.randint(-1, 1), random.randint(-1,1)]
+        self.velocity = velocity
+        #self.velocity = [random.randint(-1, 1), random.randint(-1, 1)]
 
         self.color = color
         self.size = size
@@ -32,23 +32,23 @@ class Blob():
         """
         moves the blob a step according to its velocity
         """
-        self.position = [sum(x) for x in zip(self.position, self.velocity)]
+        self.position = tuple(sum(x) for x in zip(self.position, self.velocity))
 
         #self.x_velocity += random.randint(0, 1) * (-1, 1)[self.x_velocity < 0]
         #self.y_velocity += random.randint(0, 1) * (-1, 1)[self.y_velocity < 0]
 
         if self.position[0] < self.size:
-            self.position[0] = self.size
-            self.velocity[0] = -1 * self.velocity[0]
+            self.position = (self.size, self.position[1])
+            self.velocity = (-1 * self.velocity[0], self.velocity[1])
         if self.position[0] > DISPLAY[0] - self.size:
-            self.position[0] = DISPLAY[0] - self.size
-            self.velocity[0] = -1 * self.velocity[0]
+            self.position = (DISPLAY[0] - self.size, self.position[1])
+            self.velocity = (-1 * self.velocity[0], self.velocity[1])
         if self.position[1] < self.size:
-            self.position[1] = self.size
-            self.velocity[1] = -1 * self.velocity[1]
+            self.position = (self.position[0], self.size)
+            self.velocity = (self.velocity[0], -1 * self.velocity[1])
         if self.position[1] > DISPLAY[1] - self.size:
-            self.position[1] = DISPLAY[1] - self.size
-            self.velocity[1] = -1 * self.velocity[1]
+            self.position = (self.position[0], DISPLAY[1] - self.size)
+            self.velocity = (self.velocity[0], -1 * self.velocity[1])
 
         # self.x_position = max(self.x_position, self.size)
         # self.y_position = max(self.y_position, self.size)
@@ -116,12 +116,17 @@ def _random_position():
     """ returns random tuple in display range """
     return (random.randint(0, DISPLAY[0]), random.randint(0, DISPLAY[1]))
 
+def _random_velocity(max_value=2):
+    """ returns random tuple """
+    return (random.randint(-1 * max_value, max_value), random.randint(-1 * max_value, max_value))
+
 
 def init_blobs(count=10, color=RED):
     """
     creates a count of new Blobs
     """
-    return [Blob(_random_position(), color=color, size=100) for x in range(1, count)]
+    return [Blob(position=_random_position(), velocity=_random_velocity(), color=color, size=100) for x in range(1, count)]
+    #self.velocity = [random.randint(-1, 1), random.randint(-1, 1)]
 
 
 
@@ -143,6 +148,7 @@ def main(caption):
         pygame.draw.circle(screen, blob.color, blob.position, blob.size, 0) # 0 width is filled
 
     blobs = init_blobs(3)
+
 
     exit_loop = False
     while not exit_loop:
