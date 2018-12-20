@@ -21,4 +21,38 @@ def test_blob_params():
 
 def test_blob_move():
     """ tests the some basic movement rules """
-    blob = blobs.Blob(position=(10, 10))
+    blob = blobs.Blob(position=(25, 34), velocity=(13, 12))
+    blob.move()
+    assert blob.position == (38, 46)
+
+def test_blob_move_walls():
+    """
+    tests boundary (0 side)
+
+    """
+    blob = blobs.Blob(position=(10, 25), velocity=(-20, -15), size=5)
+    # one move will hit the x 0-wall boundary  (-10, 10) will 'bounce' to (5,10)
+    blob.move()
+    assert blob.position == (5, 10)
+    assert blob.velocity == (20, -15)
+
+    # next move should put us at -15,-5; bounch to 5,5
+    blob.move()
+    assert blob.position == (25, 5)
+    assert blob.velocity == (20, 15)
+
+    # next move should put us at -15,-5; bounch to 5,5
+    blob.move()
+    assert blob.position == (45, 20)
+    assert blob.velocity == (20, 15)
+
+
+
+def test_blob_forces():
+    """
+    tests the force calculation of a blob
+    """
+    blob = blobs.Blob(position=(10, 10), size=5)
+    blob2 = blobs.Blob(position=(20, 10), size=5)
+    distance = blob.distance(blob2.position)
+    assert distance is not None

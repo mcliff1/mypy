@@ -4,6 +4,7 @@ My version of the game of life
 import random
 import itertools
 import uuid
+import math
 
 import pygame
 
@@ -104,6 +105,21 @@ class Blob():
             force_factor = const * blob.size**2
             forces.append(force_factor * force_d)
 
+
+    def distance(self, position):
+        """ distance between center of this blob and the given position """
+        return math.sqrt((self.position[0] - position[0])**2 + (self.position[1] - position[1])**2)
+
+    def direction(self, position):
+        """ returns the direction vector from the center of this blob to the position """
+        return (position[0] - self.position[0], position[1] - self.position[1])
+
+    def cf2(self, blobs, const=1.0):
+        """
+        forces is equal to sum of size^2/distance^2
+        """
+        return
+
     def __repr__(self):
         return 'Blob[name=' + str(self.name)[:6] + \
                ', ' + str(self.position) + \
@@ -125,7 +141,9 @@ def init_blobs(count=10, color=RED):
     """
     creates a count of new Blobs
     """
-    return [Blob(position=_random_position(), velocity=_random_velocity(), color=color, size=100) for x in range(1, count)]
+    return [Blob(position=_random_position(),
+                 velocity=_random_velocity(),
+                 color=color, size=100) for x in range(0, count)]
     #self.velocity = [random.randint(-1, 1), random.randint(-1, 1)]
 
 
@@ -147,7 +165,7 @@ def main(caption):
         print(blob.position)
         pygame.draw.circle(screen, blob.color, blob.position, blob.size, 0) # 0 width is filled
 
-    blobs = init_blobs(3)
+    blobs = init_blobs(2)
 
 
     exit_loop = False
