@@ -99,10 +99,13 @@ class Blob():
         """
         forces = []
         for blob in blobs:
-            force_d = ((1.0 / (blob.position[0] - self.position[0]))**2,
-                       (1.0 / (blob.position[1] - self.position[1]))**2)
             force_factor = const * blob.size**2
-            forces.append(force_factor * force_d)
+            force = ((force_factor / (blob.position[0] - self.position[0]))**2,
+                       (force_factor / (blob.position[1] - self.position[1]))**2)
+            forces.append(force)
+
+        return forces
+
 
     def __repr__(self):
         return 'Blob[name=' + str(self.name)[:6] + \
@@ -121,7 +124,12 @@ def init_blobs(count=10, color=RED):
     """
     creates a count of new Blobs
     """
-    return [Blob(_random_position(), color=color, size=100) for x in range(1, count)]
+    return [Blob(_random_position(), color=color, size=100) for x in range(0, count)]
+
+def add_vectors(v1, v2):
+    """ elementwise addition of tuples """
+    return (sum(x) for x in zip(v1, v2))
+
 
 
 
@@ -142,7 +150,7 @@ def main(caption):
         print(blob.position)
         pygame.draw.circle(screen, blob.color, blob.position, blob.size, 0) # 0 width is filled
 
-    blobs = init_blobs(3)
+    blobs = init_blobs(2)
 
     exit_loop = False
     while not exit_loop:
@@ -173,6 +181,8 @@ def main(caption):
             draw(blob)
             blob.move()
         #map(draw, blobs)
+
+        print(blobs[0].calc_forces([blobs[1]]))
 
         for pair in itertools.combinations(blobs, r=2):
             #print('checking {}'.format(pair))
