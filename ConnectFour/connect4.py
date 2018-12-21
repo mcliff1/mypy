@@ -1,7 +1,7 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 """
-Tic Tac Toe OO game
+Connect 4 OO game
 
 Base Player class is in game module
 
@@ -19,26 +19,6 @@ LOGGER.setLevel(logging.DEBUG)
 
 MODE = None
 
-class PlayerHuman(Player):
-    """
-    represents a human player
-    """
-    def __init__(self, marker):
-        self.marker = marker
-
-    def move(self, board):
-        if not board.has_open_position():
-            return False
-
-        valid_move = False
-        while not valid_move:
-            print('human player select move:')
-            choice = input()
-            move = tuple(map(int, choice.split(',')))
-            valid_move = board.place_marker(move, self.marker)
-            if not valid_move:
-                print('location {} already taken'.format(move))
-        return True
 
 
 class PlayerData(Player):
@@ -86,9 +66,6 @@ class PlayerSmart(Player):
         #self.update()
         # time.sleep(1) # too fast!
         open_moves = list(board.list_open_positions())
-        if not open_moves:
-            return False
-            
         for move in open_moves:
             if self._is_win(move, board):
                 return board.place_marker(move, self.marker)

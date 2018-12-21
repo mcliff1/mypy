@@ -56,9 +56,6 @@ class Game():
 
     two players and a board
 
-    TODO: if I try to play a game that is already in a
-          win status it shouldn't let me
-
     """
 
     def __init__(self):
@@ -93,10 +90,6 @@ class Game():
         to the winning player
         """
         method = 'play():'
-        if self.winner:
-            print('game already has a winner:{} use game.reset() to start again'.format(self.winner))
-            return
-
         player1 = players[0]
         player2 = players[1]
         if player1.marker == player2.marker:
