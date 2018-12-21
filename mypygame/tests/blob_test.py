@@ -81,19 +81,26 @@ def test_blob_forces():
     blob3blue = blobs.Blob(position=(0, 10), size=5, color=(0, 0, 255))
     blob4blue = blobs.Blob(position=(10, 20), size=5, color=(0, 0, 255))
 
-    force = blob.cf2([blob2])
+    force = blob.calc_forces([blob2])
     assert force == (-0.25, 0.0)
 
-    force = blob.cf2([blob4])
+    force = blob.calc_forces([blob4])
     assert force == (0.0, -0.25)
 
 
-    force = blob.cf2([blob2blue])
+    force = blob.calc_forces([blob2blue])
     assert force == (0.25, 0.0)
 
 
-    force = blob.cf2([blob3])
+    force = blob.calc_forces([blob3])
     assert force == (0.25, 0.0)
 
-    force = blob.cf2([blob2, blob3])
+    force = blob.calc_forces([blob2, blob3])
     assert force == (0.0, 0.0)
+
+
+
+def test_add_vectors():
+    v1 = (1, 2, 3)
+    v2 = (5, 2, 7)
+    assert blobs.add_tuple(v1, v2) == (6, 4, 10)
