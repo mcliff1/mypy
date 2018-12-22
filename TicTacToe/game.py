@@ -7,7 +7,8 @@ import logging
 import random
 
 #from board import Board
-import board
+from board import Board
+from player import Player
 
 LOGGER = logging.getLogger()
 LOGGER.setLevel(logging.DEBUG)
