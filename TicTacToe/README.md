@@ -1,3 +1,8 @@
+# Tic Tac Toe
+
+a collection of Tic Tac Toe implementations
+
+
 ## References and Background
 Copy from reference implementation -
 https://resources.oreilly.com/examples/9780596000851/tree/master/Examples/PP2E/Ai/TicTacToe
@@ -11,3 +16,4 @@ File | Notes
 tictactoe.py  |  top level wrapper
 tictactoe_lists.py  |  meat of implementation
 Gui/  | folder of supporting Gui assets
+board.py  |  Board class

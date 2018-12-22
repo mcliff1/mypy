@@ -10,7 +10,7 @@ import logging
 import random
 
 from board import Board
-from game import Player
+from player import Player
 from game import Series
 # from .game import Game
 
@@ -88,7 +88,7 @@ class PlayerSmart(Player):
         open_moves = list(board.list_open_positions())
         if not open_moves:
             return False
-            
+
         for move in open_moves:
             if self._is_win(move, board):
                 return board.place_marker(move, self.marker)
