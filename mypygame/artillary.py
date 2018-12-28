@@ -4,10 +4,19 @@ Classic Artillary GetParameter
 
 Shoot cannons over a mountain at each other
 given bags of powder and angle
+
+ref: this looks like a rather elaborate reference  implmentation
+https://github.com/collinbachi/Tanks  (see game.py)
+
+This also looks like what I was going for
+https://www.pygame.org/project-Artillery+Duel+Reloaded-1519-2701.html
+  plus more understable structure; use of config.py file
 """
 import math
 import pygame
 from pygame.color import THECOLORS
+
+if not pygame.font: print 'Warning, fonts disabled'
 
 DISPLAY = (800, 600)
 # WHITE = (255, 255, 255)
@@ -156,6 +165,7 @@ def main(caption):
             if event.type == pygame.QUIT or \
                (event.type == pygame.KEYDOWN and event.key == pygame.K_q):
                 exit_loop = True
+                # shoudl I do return here instead of exit_loop  ???
 
             # if event.key == pygame.K_UP:
             #     # make a new red blob
@@ -217,3 +227,8 @@ def main(caption):
 
 if __name__ == '__main__':
     main('Artillary')
+
+
+# from game import Game
+#    artillary = Game()
+#    artillary.main_loop()
