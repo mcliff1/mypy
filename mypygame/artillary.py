@@ -25,7 +25,7 @@ DISPLAY = (800, 600)
 GROUND_COLOR = (128, 128, 60)
 
 GROUND_LEVEL = 500
-GRAVITY = 32
+GRAVITY = 98
 
 
 class Shell():
@@ -74,7 +74,7 @@ class Gun():
         self.position = position
         self.size = 20
         self.color = (250, 90, 90)
-        self.barrel = 50
+        self.barrel = 30
 
     def draw(self, draw_line):
         """
@@ -87,7 +87,7 @@ class Gun():
 
         gun_start = (int(self.position[0] + self.size/2), line_start[1])
         gun_end = (int(gun_start[0] + math.cos(self.angle) * self.barrel), int(gun_start[1] - math.sin(self.angle) * self.barrel))
-        draw_line(self.color, gun_start, gun_end, 2)
+        draw_line(self.color, gun_start, gun_end, 5)
 
     # def set_angle(self, angle):
     #     """ stores the angle provided in degrees as radians """
@@ -97,13 +97,18 @@ class Gun():
         """ adjusts the angle of the gun up or down """
         self.angle += up_or_down * math.pi / 180
 
-    def fire(self):
+    def fire(self, speed=200):
         """
         returns a Shell object in the direction the gun is fired and loaded
         """
-        speed = 100
         velocity = (speed * math.cos(self.angle), -1 * speed * math.sin(self.angle))
-        return Shell(self.position, velocity)
+
+        # position is at the end of the barrel
+        line_start = (int(self.position[0]), int(self.position[1] - self.size/2))
+        gun_start = (int(self.position[0] + self.size/2), line_start[1])
+        gun_end = (int(gun_start[0] + math.cos(self.angle) * self.barrel), int(gun_start[1] - math.sin(self.angle) * self.barrel))
+
+        return Shell(gun_end, velocity)
 
 
 
@@ -127,7 +132,8 @@ def main(caption):
     """
     main game loop
     """
-    frames_per_second = 50
+    frames_per_second = 100
+    #max_move_speed = 100
     pygame.init()
     screen = pygame.display.set_mode((DISPLAY[0], DISPLAY[1]))
     pygame.display.set_caption(caption)
@@ -182,16 +188,16 @@ def main(caption):
             #     p_y -= step
 
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    # make a new red blob
-                    print('move the gun up')
-                    # p_y -= step
-                    gun.change_angle(1)
-                if event.key == pygame.K_DOWN:
-                    # make a new red blob
-                    print('move the gun down')
-                    # p_y += step
-                    gun.change_angle(-1)
+                # if event.key == pygame.K_UP:
+                #     # make a new red blob
+                #     print('move the gun up')
+                #     # p_y -= step
+                #     gun.change_angle(1)
+                # if event.key == pygame.K_DOWN:
+                #     # make a new red blob
+                #     print('move the gun down')
+                #     # p_y += step
+                #     gun.change_angle(-1)
                 if event.key == pygame.K_SPACE:
                     # make a new red blob
                     print('fire!')
@@ -200,6 +206,12 @@ def main(caption):
                     #shell = Shell(gun.position, (1, 1))
                 # L/R - more or less powder
                 #  space - fire
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            gun.change_angle(1)
+        if keys[pygame.K_DOWN]:
+            gun.change_angle(-1)
 
 
         # paint the frame
