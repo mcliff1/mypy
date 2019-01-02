@@ -16,7 +16,7 @@ import math
 import pygame
 from pygame.color import THECOLORS
 
-if not pygame.font: print 'Warning, fonts disabled'
+if not pygame.font: print('Warning, fonts disabled')
 
 DISPLAY = (800, 600)
 # WHITE = (255, 255, 255)
@@ -25,7 +25,7 @@ DISPLAY = (800, 600)
 GROUND_COLOR = (128, 128, 60)
 
 GROUND_LEVEL = 500
-GRAVITY = 0.1
+GRAVITY = 32
 
 
 class Shell():
@@ -41,15 +41,24 @@ class Shell():
         draw_circle(self.color, (int(self.position[0]), int(self.position[1])), self.size)
 
 
-    def move(self):
+    def move(self, frames_per_second):
         """
         applies the velocity change to position, and the gravity impact to the init_velocity
         """
         # tuple_add in one line
-        self.position = tuple(sum(x) for x in zip(self.position, self.velocity))
+        position_delta = tuple(map(lambda x: x/frames_per_second, self.velocity))
+        velocity_delta = tuple(map(lambda x: x/frames_per_second, (0, GRAVITY)))
+        self.position = tuple(sum(x) for x in zip(self.position, position_delta))
         # apply the pull of GRAVITY
-        self.velocity = tuple(sum(x) for x in zip(self.velocity, (0, GRAVITY)))
+        self.velocity = tuple(sum(x) for x in zip(self.velocity, velocity_delta))
         #print('shell.move:postion:{}'.format(self.position))
+
+
+    def impact(self, ground):
+        """
+        determines true if this shell hits the ground
+        """
+        return self.position[1] > ground
 
     def __repr__(self):
         """ representation method """
@@ -92,7 +101,7 @@ class Gun():
         """
         returns a Shell object in the direction the gun is fired and loaded
         """
-        speed = 6
+        speed = 100
         velocity = (speed * math.cos(self.angle), -1 * speed * math.sin(self.angle))
         return Shell(self.position, velocity)
 
@@ -118,7 +127,7 @@ def main(caption):
     """
     main game loop
     """
-    frames_per_second = 20
+    frames_per_second = 50
     pygame.init()
     screen = pygame.display.set_mode((DISPLAY[0], DISPLAY[1]))
     pygame.display.set_caption(caption)
@@ -154,7 +163,7 @@ def main(caption):
     exit_loop = False
     # p_x = 200
     # p_y = 100
-    step = 2
+    #step = 2
 
     gun = Gun((200, GROUND_LEVEL))
     shells = []
@@ -202,14 +211,17 @@ def main(caption):
         gun.draw(draw_line)
 
 
-        # check for impact !
-        # if shell.position < ground level
 
         #map(lambda x: x.draw(draw_circle), shells)
         #map(lambda x: x.move(), shells)
-        for shell in shells:
+        for shell in shells.copy():
+            # check for impact !
+            if shell.impact(GROUND_LEVEL):
+                shells.remove(shell)
+
+
             shell.draw(draw_circle)
-            shell.move()
+            shell.move(frames_per_second)
 
 
 
