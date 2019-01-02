@@ -1,9 +1,9 @@
 """ tests on the artillary class """
-from .. import artillary
+from .. import artillery
 
 def test_defaults():
     """ ensure the default color is red """
-    gun = artillary.Gun((0, 0))
+    gun = artillery.Gun((0, 0))
     assert gun.color == (250, 90, 90)
     assert gun.size == 20
     assert gun.position == (0, 0)
@@ -12,7 +12,7 @@ def test_shell():
     """ ensure the default color is red """
     init_velocity = (2, 3)
     init_position = (15, 17)
-    shell = artillary.Shell(init_position, init_velocity)
+    shell = artillery.Shell(init_position, init_velocity)
     #assert shell.color == (0, 0, 0)
     assert shell.size == 3
     assert shell.position == init_position
@@ -31,7 +31,7 @@ def test_shell():
 #
 def test_shell_move():
     """ tests the some basic movement rules """
-    shell = artillary.Shell(position=(25, 34), velocity=(13, 12))
+    shell = artillery.Shell(position=(25, 34), velocity=(13, 12))
     shell.move()
     assert shell.position == (38, 46)
 
