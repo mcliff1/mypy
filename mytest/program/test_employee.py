@@ -1,5 +1,6 @@
-
 import unittest
+from mock import patch
+
 from employee import Employee
 
 
@@ -34,6 +35,12 @@ class TestEmployee(unittest.TestCase):
 
         self.assertEqual(self.emp_1.pay, 52500)
 
+
+    @patch('employee.requests')
+    def test_schedule(self, _mock_req):
+        _mock_req.get.return_value.ok = True
+        _mock_req.get.return_value.text = 'June Schedule for {}'.format(self.emp_1.last)
+        self.assertEqual(self.emp_1.schedule('june'), 'June Schedule for Cliff')
 
 if __name__ == '__main__':
     unittest.main()

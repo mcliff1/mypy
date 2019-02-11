@@ -18,3 +18,8 @@ class TestProgram(unittest.TestCase):
 
         mock_open.assert_called_once_with(path, 'wb')
         mock_pickle.assert_called_once_with('data', f)
+
+
+
+if __name__ == '__main__':
+    unittest.main()
