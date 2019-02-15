@@ -42,5 +42,22 @@ class TestEmployee(unittest.TestCase):
         _mock_req.get.return_value.text = 'June Schedule for {}'.format(self.emp_1.last)
         self.assertEqual(self.emp_1.schedule('june'), 'June Schedule for Cliff')
 
+
+    def test_monthly(self):
+        with patch('employee.requests.get') as mocked_get:
+            mock_get.return_value.ok = True
+            mock._get.return_value.text = 'Success'
+
+            schedule = self.emp_1.monthly_schedule('May')
+            mocked_get.assert_called_with('http://company.com/Cliff/May')
+            self.assertEqual(schedule, 'Success')
+
+        with patch('employee.requests.get') as mocked_get:
+            mock_get.return_value.ok = False
+
+            schedule = self.emp_2.monthly_schedule('June')
+            mocked_get.assert_called_with('http://company.com/Smith/June')
+            self.assertEqual(schedule, 'Bad Response')
+
 if __name__ == '__main__':
     unittest.main()
