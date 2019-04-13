@@ -45,8 +45,8 @@ class TestEmployee(unittest.TestCase):
 
     def test_monthly(self):
         with patch('employee.requests.get') as mocked_get:
-            mock_get.return_value.ok = True
-            mock._get.return_value.text = 'Success'
+            mocked_get.return_value.ok = True
+            mocked_get.return_value.text = 'Success'
 
             schedule = self.emp_1.monthly_schedule('May')
             mocked_get.assert_called_with('http://company.com/Cliff/May')
