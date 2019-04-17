@@ -3,7 +3,7 @@ Python Projects
 
 Working to incorporate Travis CI on this project and start the CI/CD cycle.
 
-https://github.com/geekcomputers/Python/blob/master/.travis.yml
+[geek-python](https://github.com/geekcomputers/Python/blob/master/.travis.yml)
 
 Added pylint-atom.rc to ignore [security issue](https://stackoverflow.com/questions/28437071/pylint-1-4-reports-e1101no-member-on-all-c-extensions) for pylint with C-Extensions
 
