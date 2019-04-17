@@ -2,6 +2,7 @@
 wraps up widget construction
 """
 from tkinter import *
+from __future__ import print_function
 
 def frame(root, side=TOP, **extras):
     """
