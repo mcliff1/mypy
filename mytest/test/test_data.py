@@ -8,7 +8,7 @@ class TestProgram(unittest.TestCase):
     """
 
     @patch('cPickle.dump')
-    @patch('__builtin__.open', spec=file)
+    #@patch('__builtin__.open', spec=file)
     def test_write_out(self, mock_open, mock_pickle):
         path = '~/testpath'
         f = mock_open.return_value.__enter__.return_value
