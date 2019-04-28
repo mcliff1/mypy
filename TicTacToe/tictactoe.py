@@ -10,7 +10,7 @@ import logging
 import random
 
 from board import Board
-from game import Player
+from player import Player
 from game import Series
 # from .game import Game
 
@@ -59,6 +59,7 @@ class PlayerData(Player):
         board_set = {board_move[0] for  board_move in winning_moves}
 
         self._move_data = {}
+        print('there are {} board_sets'.format(len(board_set)))
         for board in board_set:
             move_summary = {x[0][1]: x[1] for x in move_scores if x[0][0] == board}
             self._move_data[board] = max(move_summary, key=lambda k: move_summary[k])
@@ -88,7 +89,7 @@ class PlayerSmart(Player):
         open_moves = list(board.list_open_positions())
         if not open_moves:
             return False
-            
+
         for move in open_moves:
             if self._is_win(move, board):
                 return board.place_marker(move, self.marker)
@@ -243,14 +244,16 @@ def main():
     #         trace(opts)
     #         apply(TicTacToe, (), opts).mainloop()
     series = Series()
-    series.run(100000)
+    print('run a series with 100000 iterations')
+    series.run(10000)
 
     px = PlayerData('X', series.winning_moves)
     # Game().play([d1, p2])
 
     # series against trained opponent
     series2 = Series()
-    series2.run(1000)
+    print('run anotrher series with 1000')
+    series2.run(100)
     po = PlayerData('O', series2.winning_moves)
     # pa1 = PlayerSmart('smrt1', 'X')
     # pa2 = PlayerSmart('smrt2', 'O')

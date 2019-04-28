@@ -188,16 +188,16 @@ class PlayerSmart(Player):
 
 
 
-def TicTacToe(mode=MODE, **args):
-    """
-    Game Object Generator Class - external Interface
-    """
-    # try:
-    #     classname = 'TicTacToe' + mode
-    #     classobj = eval(classname)
-    # except:
-    #     print('Bad -mode flag value:', mode)
-    # return apply(eval(classname), (), args)
+# def TicTacToe(mode=MODE, **args):
+#     """
+#     Game Object Generator Class - external Interface
+#     """
+#     # try:
+#     #     classname = 'TicTacToe' + mode
+#     #     classobj = eval(classname)
+#     # except:
+#     #     print('Bad -mode flag value:', mode)
+#     # return apply(eval(classname), (), args)
 
 
 

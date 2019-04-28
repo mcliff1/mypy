@@ -4,6 +4,7 @@ Text based Tic Tac Toe implementation
 
 from https://github.com/solkaz/tic-tac-pytoe/blob/master/tic_tac_toe.py
 """
+from __future__ import print_function
 import random
 
 BOARD = {
