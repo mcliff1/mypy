@@ -1,8 +1,8 @@
 """
 wraps up widget construction
 """
-from tkinter import *
 from __future__ import print_function
+from tkinter import *
 
 def frame(root, side=TOP, **extras):
     """
