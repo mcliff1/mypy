@@ -3,6 +3,11 @@
 a collection of Tic Tac Toe implementations
 
 
+`python tictactoe.py` will run a simulation against itelf
+
+`python tictactoe_gui.py` will run a 1 player game in UI
+
+
 ## References and Background
 Copy from reference implementation -
 https://resources.oreilly.com/examples/9780596000851/tree/master/Examples/PP2E/Ai/TicTacToe

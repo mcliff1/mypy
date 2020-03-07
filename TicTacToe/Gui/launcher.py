@@ -76,6 +76,7 @@ if IS_WINDOWS:
     PortableLauncher = Spawn
 else:
     PortableLauncher = Fork
+#PortableLauncher = Fork
 
 class QuietPortableLauncher(PortableLauncher):
     def announce(self, text):
