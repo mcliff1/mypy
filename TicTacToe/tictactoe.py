@@ -245,7 +245,7 @@ def main():
     #         apply(TicTacToe, (), opts).mainloop()
     series = Series()
     num_iterations = 10000
-    print(f'run a series with {num_iterations} iterations')
+    print('run a series with {} iterations'.format(num_iterations))
     series.run(num_iterations)
 
     px = PlayerData('X', series.winning_moves)
