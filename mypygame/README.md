@@ -1,0 +1,3 @@
+# MyPyGame
+`python mygame.py`
+
